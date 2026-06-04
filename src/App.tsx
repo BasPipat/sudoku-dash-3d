@@ -721,41 +721,42 @@ const App: React.FC = () => {
           )}
         </div>
 
-        {/* Row 4: Input mode tab */}
-        <div className="control-section">
-          <div className="control-section-title">Input Mode</div>
-          <div className="segmented-control mode-tabs">
-            <button
-              className={`btn mode-btn ${!isNotesMode ? 'active' : ''}`}
-              onClick={() => setIsNotesMode(false)}
-            >
-              Normal
-            </button>
-            <button
-              className={`btn mode-btn notes-mode ${isNotesMode ? 'active' : ''}`}
-              onClick={() => setIsNotesMode(true)}
-            >
-              Notes
-            </button>
+        {/* Row 4 & 4.5: Input Mode + Assist — combined into one row on mobile */}
+        <div className="mode-assist-row">
+          <div className="control-section">
+            <div className="control-section-title">Input Mode</div>
+            <div className="segmented-control mode-tabs">
+              <button
+                className={`btn mode-btn ${!isNotesMode ? 'active' : ''}`}
+                onClick={() => setIsNotesMode(false)}
+              >
+                Normal
+              </button>
+              <button
+                className={`btn mode-btn notes-mode ${isNotesMode ? 'active' : ''}`}
+                onClick={() => setIsNotesMode(true)}
+              >
+                Notes
+              </button>
+            </div>
           </div>
-        </div>
 
-        {/* Row 4.5: Gameplay Assist toggle */}
-        <div className="control-section">
-          <div className="control-section-title">Gameplay Assist</div>
-          <div className="segmented-control mode-tabs">
-            <button
-              className={`btn mode-btn ${!isAssistMode ? 'active' : ''}`}
-              onClick={() => setIsAssistMode(false)}
-            >
-              Assist Off
-            </button>
-            <button
-              className={`btn mode-btn ${isAssistMode ? 'active' : ''}`}
-              onClick={() => setIsAssistMode(true)}
-            >
-              Assist On
-            </button>
+          <div className="control-section">
+            <div className="control-section-title">Gameplay Assist</div>
+            <div className="segmented-control mode-tabs">
+              <button
+                className={`btn mode-btn ${!isAssistMode ? 'active' : ''}`}
+                onClick={() => setIsAssistMode(false)}
+              >
+                Assist Off
+              </button>
+              <button
+                className={`btn mode-btn ${isAssistMode ? 'active' : ''}`}
+                onClick={() => setIsAssistMode(true)}
+              >
+                Assist On
+              </button>
+            </div>
           </div>
         </div>
 

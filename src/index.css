@@ -1340,6 +1340,13 @@ h1.game-title {
   gap: 16px;
 }
 
+/* Mode + Assist row wrapper — side by side on mobile */
+.mode-assist-row {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 .control-section {
   display: flex;
   flex-direction: column;
@@ -1469,52 +1476,53 @@ h1.game-title {
   background: rgba(15, 23, 42, 0.06);
 }
 
-/* Mobile Responsive Game Layout */
+/* Mobile Responsive Game Layout — No-Scroll Fixed Viewport */
 @media (max-width: 900px) {
   html, body, #root {
-    height: auto !important;
-    overflow: auto !important;
+    height: 100% !important;
+    overflow: hidden !important;
   }
 
+  /* The gameplay container fills the screen exactly, no scroll */
   .gameplay-container {
     display: flex;
     flex-direction: column;
-    height: auto !important;
-    min-height: 100vh;
-    padding: 12px;
-    gap: 12px;
-    overflow-y: visible !important;
-    box-sizing: border-box;
-    width: 100%;
-    overflow-x: hidden;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    padding: 6px 8px !important;
+    gap: 5px !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
   }
 
   .game-sidebar {
-    display: contents; /* Makes children layout as direct children of the flex container */
+    display: contents;
   }
 
+  /* ── 1. Header: hidden on mobile to save space */
   .game-header-bar {
-    order: 1;
-    width: 100%;
-    box-sizing: border-box;
+    display: none !important;
   }
 
+  /* ── 2. HUD bar: tight single row */
   .game-hud-bar {
-    order: 2;
-    width: 100%;
-    box-sizing: border-box;
+    order: 1;
+    flex-shrink: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
     display: flex !important;
     flex-direction: row !important;
     justify-content: space-between !important;
     align-items: center !important;
-    gap: 6px !important;
-    padding: 6px 8px !important;
-    background: var(--bg-panel);
+    gap: 4px !important;
+    padding: 4px 6px !important;
+    background: var(--bg-panel) !important;
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid var(--border-color);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
-    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    border-radius: 10px !important;
   }
 
   .hud-item {
@@ -1522,21 +1530,20 @@ h1.game-title {
     flex-direction: row !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 4px !important;
-    padding: 6px !important;
+    gap: 3px !important;
+    padding: 4px 3px !important;
     margin: 0 !important;
-    background: rgba(0, 0, 0, 0.15) !important;
-    border-radius: 8px !important;
+    background: rgba(0,0,0,0.15) !important;
+    border-radius: 6px !important;
     min-width: 0 !important;
     flex: 1 !important;
   }
 
   .hud-item .hud-icon {
-    font-size: 14px !important;
+    font-size: 12px !important;
     margin: 0 !important;
   }
 
-  /* Hide the double icon in the mistakes/hearts box on mobile to save space */
   .hud-item:last-child .hud-icon {
     display: none !important;
   }
@@ -1545,72 +1552,56 @@ h1.game-title {
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
-    text-align: center !important;
   }
 
   .hud-item .hud-label {
-    display: none !important; /* Hide labels like DIFFICULTY, TIME to save height */
+    display: none !important;
   }
 
   .hud-item .hud-value {
-    font-size: 11px !important;
+    font-size: 10px !important;
     font-weight: 700 !important;
-    line-height: 1.2 !important;
+    line-height: 1.1 !important;
   }
 
   .hud-item .hud-value.mistakes {
     display: flex !important;
-    gap: 2px !important;
+    gap: 1px !important;
   }
 
+  /* ── 3. Slice title: hidden — info shown in layer selector label */
   .active-slice-title {
-    order: 3;
-    display: block;
-    text-align: center;
-    width: 100%;
-    box-sizing: border-box;
+    display: none !important;
   }
 
-  .active-slice-title h2 {
-    font-size: 18px;
-    font-weight: 700;
-    color: #facc15;
-    text-shadow: 0 0 8px rgba(250, 204, 21, 0.3);
-    margin: 4px 0;
-  }
-
-  .active-slice-title .active-slice-sub {
-    font-size: 11px;
-    color: var(--text-muted);
-    margin: 0;
-  }
-
+  /* ── 4. Viewport: flexible, fills remaining space between HUD and controls */
   .game-viewport-container {
-    order: 4;
+    order: 2 !important;
+    flex: 1 1 0% !important;
+    min-height: 0 !important;
+    max-height: none !important;
     width: 100% !important;
-    max-width: min(440px, 90vw) !important;
+    max-width: 100% !important;
     height: auto !important;
-    aspect-ratio: 1 / 1 !important;
-    min-height: min(440px, 90vw) !important; /* Prevent collapsing in 3D Canvas mode */
+    aspect-ratio: unset !important;
     margin: 0 auto !important;
-    border-radius: 16px;
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid var(--border-color);
-    box-sizing: border-box;
+    border-radius: 12px !important;
+    background: rgba(0,0,0,0.2) !important;
+    border: 1px solid var(--border-color) !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
   }
 
-  /* 2D mode mobile specific layout optimizations */
+  /* 2D mode: board fills container */
   .viewmode-2d .game-viewport-container {
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
     justify-content: center !important;
-    aspect-ratio: auto !important;
-    height: auto !important;
-    min-height: 0 !important;
-    border: none !important;
-    background: transparent !important;
-    box-shadow: none !important;
+    aspect-ratio: unset !important;
+    background: rgba(0,0,0,0.2) !important;
+    border: 1px solid var(--border-color) !important;
+    padding: 4px !important;
   }
 
   .viewmode-2d .board-2d-pane {
@@ -1619,31 +1610,148 @@ h1.game-title {
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
-    height: auto !important;
+    height: 100% !important;
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
 
   .viewmode-2d .board-2d-header {
     display: none !important;
   }
 
+  /* Board fills the flex container, sized by parent */
   .viewmode-2d .board-2d-grid {
-    width: 100% !important;
-    max-width: min(360px, 90vw, 48vh) !important; /* Scale to fit mobile portrait cleanly */
+    width: min(100%, 100cqh) !important;
+    max-width: min(340px, 90vw, calc(100dvh - 280px)) !important;
     margin: 0 auto !important;
   }
 
+  /* ── 5. Controls panel: compact fixed strip at bottom */
   .game-controls-panel {
-    order: 5;
-    width: 100%;
-    border-radius: 16px;
-    padding: 16px;
-    overflow-y: visible;
-    background: var(--bg-panel);
+    order: 3 !important;
+    flex-shrink: 0 !important;
+    width: 100% !important;
+    border-radius: 12px !important;
+    padding: 8px 10px !important;
+    gap: 6px !important;
+    overflow: visible !important;
+    background: var(--bg-panel) !important;
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid var(--border-color);
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-    box-sizing: border-box;
+    border: 1px solid var(--border-color) !important;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.3) !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  /* Hide section titles to save vertical space */
+  .control-section-title {
+    display: none !important;
+  }
+
+  /* Axis selector: 3 buttons in one row */
+  .control-section:has(.segmented-control:not(.mode-tabs)) {
+    margin: 0 !important;
+  }
+
+  .segmented-control {
+    gap: 4px !important;
+  }
+
+  .segmented-control .btn {
+    padding: 5px 4px !important;
+    font-size: 10px !important;
+    border-radius: 6px !important;
+    min-height: 28px !important;
+  }
+
+  /* Layer grid: tighter */
+  .layers-control-grid {
+    gap: 4px !important;
+  }
+
+  .layer-btn {
+    padding: 4px 2px !important;
+    font-size: 9px !important;
+    border-radius: 5px !important;
+    min-height: 24px !important;
+  }
+
+  /* Hide selected cell banner and slice banner on mobile */
+  .selected-cell-banner {
+    display: none !important;
+  }
+
+  .clicked-slice-banner {
+    display: none !important;
+  }
+
+  /* Input mode + assist: one row each, smaller */
+  .mode-tabs {
+    gap: 4px !important;
+  }
+
+  .mode-btn {
+    padding: 5px 4px !important;
+    font-size: 10px !important;
+    border-radius: 6px !important;
+    min-height: 26px !important;
+  }
+
+  /* Keypad: 9 buttons in 3 cols, compact */
+  .keypad-grid-controls {
+    gap: 4px !important;
+  }
+
+  .keypad-btn-val {
+    padding: 7px 0 !important;
+    font-size: 16px !important;
+    border-radius: 8px !important;
+    min-height: 36px !important;
+  }
+
+  /* Action buttons: smaller */
+  .action-row-buttons {
+    gap: 6px !important;
+    margin-top: 0 !important;
+  }
+
+  .action-btn {
+    padding: 6px 0 !important;
+    font-size: 11px !important;
+    border-radius: 8px !important;
+    min-height: 28px !important;
+  }
+
+  /* Mode + Assist: two columns side by side on mobile */
+  .mode-assist-row {
+    flex-direction: row !important;
+    gap: 6px !important;
+  }
+
+  .mode-assist-row .control-section {
+    flex: 1 !important;
+    min-width: 0 !important;
+  }
+
+  .mode-assist-row .segmented-control {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Keypad: single row of 9 on mobile saves a full row of height */
+  .keypad-grid-controls {
+    grid-template-columns: repeat(9, 1fr) !important;
+    gap: 3px !important;
+  }
+
+  .keypad-btn-val {
+    padding: 8px 2px !important;
+    font-size: 14px !important;
+    border-radius: 7px !important;
+    min-height: 34px !important;
   }
 
   /* Mobile Menu Screen Adjustments */
