@@ -262,7 +262,7 @@ export const Cell: React.FC<CellProps> = ({
     ? 50
     : isGlowing
     ? 40
-    : isActiveSlice && activeLayer !== 'all'
+    : activeLayer !== 'all' && isActiveSlice
     ? 20
     : isHoveredSlice
     ? 10

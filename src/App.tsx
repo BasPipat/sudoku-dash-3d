@@ -3,13 +3,6 @@ import { GameCanvas } from './components/GameCanvas';
 import { Board2D } from './components/Board2D';
 import type { Sudoku3DBoard, SelectedCell, Difficulty, FocusAxis } from './types';
 import { generatePuzzle, checkSudokuRules, checkWinCondition, getGlowingCells } from './utils/sudoku';
-
-const PLANE_LABELS: Record<FocusAxis, string> = {
-  Z: 'X / Y',
-  Y: 'X / Z',
-  X: 'Z / Y',
-};
-
 function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60).toString().padStart(2, '0');
   const s = (seconds % 60).toString().padStart(2, '0');
@@ -363,10 +356,6 @@ const App: React.FC = () => {
     } else {
       setHoveredSlice({ axis, index });
     }
-  };
-
-  const handleSelectLayer = (axis: FocusAxis, layer: number) => {
-    triggerTransition(axis, layer);
   };
 
   if (screen === 'splash') {
@@ -824,8 +813,6 @@ const App: React.FC = () => {
             activeLayer={activeLayer}
             focusAxis={focusAxis}
             onSelectCell={handleSelectCell}
-            onSelectLayer={handleSelectLayer}
-            isNotesMode={isNotesMode}
             glowingCells={glowingCells}
             isAssistMode={isAssistMode}
           />

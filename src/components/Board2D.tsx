@@ -7,8 +7,6 @@ interface Board2DProps {
   activeLayer: number | 'all';
   focusAxis: FocusAxis;
   onSelectCell: (x: number, y: number, z: number) => void;
-  onSelectLayer: (axis: FocusAxis, layer: number) => void;
-  isNotesMode: boolean;
   glowingCells: Set<string>;
   isAssistMode: boolean;
 }
@@ -19,8 +17,6 @@ export const Board2D: React.FC<Board2DProps> = ({
   activeLayer,
   focusAxis,
   onSelectCell,
-  onSelectLayer,
-  isNotesMode,
   glowingCells,
   isAssistMode,
 }) => {
