@@ -10,6 +10,7 @@ interface Board2DProps {
   onSelectLayer: (axis: FocusAxis, layer: number) => void;
   isNotesMode: boolean;
   glowingCells: Set<string>;
+  isAssistMode: boolean;
 }
 
 export const Board2D: React.FC<Board2DProps> = ({
@@ -21,6 +22,7 @@ export const Board2D: React.FC<Board2DProps> = ({
   onSelectLayer,
   isNotesMode,
   glowingCells,
+  isAssistMode,
 }) => {
   // Helper to map 2D cell click/coords to 3D cell coords
   const map2DTo3D = (row: number, col: number): { x: number; y: number; z: number } => {
@@ -38,6 +40,30 @@ export const Board2D: React.FC<Board2DProps> = ({
     const { x, y, z } = map2DTo3D(row, col);
     return board[z][y][x];
   };
+
+  const getSelected2DCoords = (): { row: number; col: number } | null => {
+    if (!selectedCell) return null;
+    if (focusAxis === 'X') {
+      return { row: selectedCell.y, col: selectedCell.z };
+    } else if (focusAxis === 'Y') {
+      return { row: selectedCell.z, col: selectedCell.x };
+    } else {
+      return { row: selectedCell.y, col: selectedCell.x };
+    }
+  };
+
+  const isSelectedInActiveLayer = selectedCell && (
+    activeLayer !== 'all' && (
+      (focusAxis === 'X' && selectedCell.x === activeLayer) ||
+      (focusAxis === 'Y' && selectedCell.y === activeLayer) ||
+      (focusAxis === 'Z' && selectedCell.z === activeLayer)
+    )
+  );
+
+  const selected2DCoords = getSelected2DCoords();
+  const selectedValue = isSelectedInActiveLayer && selectedCell
+    ? board[selectedCell.z][selectedCell.y][selectedCell.x].value
+    : 0;
 
   const isCellSelected = (row: number, col: number): boolean => {
     if (!selectedCell) return false;
@@ -94,10 +120,20 @@ export const Board2D: React.FC<Board2DProps> = ({
                 const { x, y, z } = map2DTo3D(rowIdx, colIdx);
                 const isGlowing = glowingCells.has(`${x}-${y}-${z}`);
 
+                // Assist Mode class names
+                const isCrosshair = isAssistMode && isSelectedInActiveLayer && selected2DCoords && !isSelected &&
+                  (rowIdx === selected2DCoords.row || colIdx === selected2DCoords.col);
+                const isSameValue = isAssistMode && isSelectedInActiveLayer && selectedValue > 0 && cell.value === selectedValue && !isSelected;
+
+                const assistClasses = [
+                  isCrosshair ? 'crosshair' : '',
+                  isSameValue ? 'same-value' : '',
+                ].filter(Boolean).join(' ');
+
                 return (
                   <div
                     key={colIdx}
-                    className={`cell-2d ${isSelected ? 'selected' : ''} ${cell.isOriginal ? 'original' : ''} ${cell.isError ? 'error' : ''} ${isGlowing ? 'glowing' : ''} ${borderClasses}`}
+                    className={`cell-2d ${isSelected ? 'selected' : ''} ${cell.isOriginal ? 'original' : ''} ${cell.isError ? 'error' : ''} ${isGlowing ? 'glowing' : ''} ${assistClasses} ${borderClasses}`}
                     onClick={() => handleCellClick(rowIdx, colIdx)}
                   >
                     {hasValue ? (

@@ -9,10 +9,13 @@ interface LayeredBoardProps {
   selectedCell: SelectedCell | null;
   activeLayer: number | 'all';
   focusAxis: FocusAxis;
-  onSelectCell: (x: number, y: number, z: number) => void;
+  onSelectCell: (x: number, y: number, z: number, axis?: FocusAxis, index?: number) => void;
   hoveredSlice: { axis: FocusAxis; index: number } | null;
   onHoverSlice: (axis: FocusAxis | null, index: number | null) => void;
   glowingCells: Set<string>;
+  isTransitioning?: boolean;
+  transitionProgress?: number;
+  transitionSlice?: { axis: FocusAxis; index: number } | null;
 }
 
 export const LayeredBoard: React.FC<LayeredBoardProps> = ({
@@ -24,6 +27,9 @@ export const LayeredBoard: React.FC<LayeredBoardProps> = ({
   hoveredSlice,
   onHoverSlice,
   glowingCells,
+  isTransitioning = false,
+  transitionProgress = 0,
+  transitionSlice = null,
 }) => {
   // Generate 729 cells in a perfect 9x9x9 cube structure
   const gridCells = useMemo(() => {
@@ -91,6 +97,13 @@ export const LayeredBoard: React.FC<LayeredBoardProps> = ({
           selectedCell.y === y &&
           selectedCell.z === z;
 
+        const isCellTransitioning =
+          isTransitioning &&
+          transitionSlice !== null &&
+          ((transitionSlice.axis === 'X' && x === transitionSlice.index) ||
+            (transitionSlice.axis === 'Y' && y === transitionSlice.index) ||
+            (transitionSlice.axis === 'Z' && z === transitionSlice.index));
+
         return (
           <Cell
             key={`${z}-${y}-${x}`}
@@ -108,13 +121,16 @@ export const LayeredBoard: React.FC<LayeredBoardProps> = ({
             hoveredSlice={hoveredSlice}
             onHoverSlice={onHoverSlice}
             notes={cellState.notes || []}
-            onClick={() => onSelectCell(x, y, z)}
+            onClick={(clickX, clickY, clickZ, axis, idx) => onSelectCell(clickX, clickY, clickZ, axis, idx)}
+            isTransitioning={isCellTransitioning}
+            transitionProgress={transitionProgress}
+            globalTransitionActive={isTransitioning}
           />
         );
       })}
 
       {/* Floating 3D label for hovered slice */}
-      {hoverLabelProps && (
+      {hoverLabelProps && !isTransitioning && (
         <Text
           position={hoverLabelProps.labelPos}
           fontSize={0.48}

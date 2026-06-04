@@ -19,8 +19,11 @@ interface CellProps {
   hoveredSlice: { axis: FocusAxis; index: number } | null;
   onHoverSlice: (axis: FocusAxis | null, index: number | null) => void;
   notes: number[];
-  onClick: () => void;
+  onClick: (x: number, y: number, z: number, axis: FocusAxis, index: number) => void;
   position: [number, number, number];
+  isTransitioning?: boolean;
+  transitionProgress?: number;
+  globalTransitionActive?: boolean;
 }
 
 const EDGE_GEOMETRY = new THREE.EdgesGeometry(
@@ -43,6 +46,9 @@ export const Cell: React.FC<CellProps> = ({
   notes,
   onClick,
   position,
+  isTransitioning = false,
+  transitionProgress = 0,
+  globalTransitionActive = false,
 }) => {
   const isHiddenBySlicing =
     activeLayer !== 'all' &&
@@ -105,6 +111,17 @@ export const Cell: React.FC<CellProps> = ({
 
     // Transparent cube styling in 'All' layers view
     if (activeLayer === 'all') {
+      if (isHoveredSlice) {
+        return {
+          cellColor: '#ffedd5', // light amber hover color
+          edgeColor: '#f97316', // orange border
+          emissive: '#7c2d12',
+          emissiveIntensity: 0.25,
+          opacity: 0.45,
+          textColor: '#f97316',
+          transparent: true,
+        };
+      }
       return {
         cellColor: isOriginal ? '#f7f2e8' : '#e5eef2',
         edgeColor: isOriginal ? 'rgba(212, 180, 106, 0.4)' : 'rgba(167, 183, 196, 0.3)',
@@ -179,9 +196,32 @@ export const Cell: React.FC<CellProps> = ({
     onHoverSlice(hoverAxis, sliceIndex);
   };
 
+  const handlePointerOut = (event: ThreeEvent<PointerEvent>) => {
+    event.stopPropagation();
+    onHoverSlice(null, null);
+  };
+
   const handleMeshClick = (event: ThreeEvent<MouseEvent>) => {
     event.stopPropagation();
-    onClick();
+    
+    const normal = event.face?.normal;
+    let clickedAxis: FocusAxis = focusAxis;
+    let sliceIndex = 0;
+    
+    if (normal) {
+      if (Math.abs(normal.x) > 0.8) {
+        clickedAxis = 'X';
+        sliceIndex = x;
+      } else if (Math.abs(normal.y) > 0.8) {
+        clickedAxis = 'Y';
+        sliceIndex = y;
+      } else if (Math.abs(normal.z) > 0.8) {
+        clickedAxis = 'Z';
+        sliceIndex = z;
+      }
+    }
+    
+    onClick(x, y, z, clickedAxis, sliceIndex);
   };
 
   const notesText = useMemo(() => {
@@ -228,15 +268,48 @@ export const Cell: React.FC<CellProps> = ({
     ? 10
     : 1;
 
+  // Calculate animated position when pulling slice out
+  const animatedPosition = useMemo(() => {
+    if (!isTransitioning || !transitionProgress) return position;
+    
+    const pos = [...position] as [number, number, number];
+    const pullDistance = transitionProgress * 4.8; // slide out by 4.8 units
+
+    if (focusAxis === 'X') {
+      pos[0] += pullDistance;
+    } else if (focusAxis === 'Y') {
+      // Y is inverted in getBoardCoord, so let's pull upward
+      pos[1] += pullDistance;
+    } else if (focusAxis === 'Z') {
+      // Z is inverted, pull towards camera (positive Z)
+      pos[2] += pullDistance;
+    }
+    return pos;
+  }, [position, isTransitioning, transitionProgress, focusAxis]);
+
+  // Calculate animated opacity based on whether we are in a transition phase
+  const opacity = useMemo(() => {
+    let baseOpacity = visual.opacity;
+    if (globalTransitionActive && transitionProgress !== undefined) {
+      if (isTransitioning) {
+        baseOpacity = visual.opacity; // Keep the active sliding slice visible
+      } else {
+        baseOpacity = visual.opacity * (1 - transitionProgress); // Fade others out
+      }
+    }
+    return baseOpacity;
+  }, [visual.opacity, globalTransitionActive, transitionProgress, isTransitioning]);
+
   return (
     <group
-      position={position}
+      position={animatedPosition}
       renderOrder={renderOrder}
       scale={isSelected ? [1.05, 1.05, 1.05] : [1, 1, 1]}
     >
       <mesh
         onClick={handleMeshClick}
         onPointerOver={handlePointerOver}
+        onPointerOut={handlePointerOut}
         renderOrder={renderOrder}
       >
         <boxGeometry args={[BOARD_CELL_SIZE, BOARD_CELL_SIZE, BOARD_CELL_DEPTH]} />
@@ -246,9 +319,9 @@ export const Cell: React.FC<CellProps> = ({
           emissive={visual.emissive}
           emissiveIntensity={visual.emissiveIntensity}
           metalness={0.05}
-          opacity={visual.opacity}
+          opacity={opacity}
           roughness={0.4}
-          transparent={visual.transparent}
+          transparent={visual.transparent || globalTransitionActive}
         />
       </mesh>
 
@@ -258,7 +331,7 @@ export const Cell: React.FC<CellProps> = ({
         <lineBasicMaterial
           color={visual.edgeColor}
           depthWrite={false}
-          opacity={visual.transparent ? visual.opacity * 0.5 : 0.8}
+          opacity={visual.transparent ? opacity * 0.5 : opacity * 0.8}
           transparent
         />
       </lineSegments>
@@ -269,7 +342,7 @@ export const Cell: React.FC<CellProps> = ({
           position={[0, 0, BOARD_CELL_DEPTH / 2 + 0.015]}
           fontSize={0.42}
           color={visual.textColor}
-          fillOpacity={visual.opacity}
+          fillOpacity={opacity}
           anchorX="center"
           anchorY="middle"
           outlineColor={isGlowing ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.15)'}
@@ -287,7 +360,7 @@ export const Cell: React.FC<CellProps> = ({
           rotation={[-Math.PI / 2, 0, 0]}
           fontSize={0.42}
           color={visual.textColor}
-          fillOpacity={visual.opacity}
+          fillOpacity={opacity}
           anchorX="center"
           anchorY="middle"
           outlineColor={isGlowing ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.15)'}
@@ -305,7 +378,7 @@ export const Cell: React.FC<CellProps> = ({
           rotation={[0, Math.PI / 2, 0]}
           fontSize={0.42}
           color={visual.textColor}
-          fillOpacity={visual.opacity}
+          fillOpacity={opacity}
           anchorX="center"
           anchorY="middle"
           outlineColor={isGlowing ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.15)'}

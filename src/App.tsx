@@ -20,10 +20,12 @@ const App: React.FC = () => {
   const [difficulty, setDifficulty] = useState<Difficulty>('easy');
   const [board, setBoard] = useState<Sudoku3DBoard>(() => generatePuzzle('easy'));
   const [selectedCell, setSelectedCell] = useState<SelectedCell | null>(null);
-  const [activeLayer, setActiveLayer] = useState<number | 'all'>(0);
+  const [activeLayer, setActiveLayer] = useState<number | 'all'>('all');
   const [focusAxis, setFocusAxis] = useState<FocusAxis>('Z');
   const [hoveredSlice, setHoveredSlice] = useState<{ axis: FocusAxis; index: number } | null>(null);
+  const [clickedSlice, setClickedSlice] = useState<{ axis: FocusAxis; index: number } | null>(null);
   const [isNotesMode, setIsNotesMode] = useState<boolean>(false);
+  const [isAssistMode, setIsAssistMode] = useState<boolean>(true);
   const [timer, setTimer] = useState<number>(0);
   const [moves, setMoves] = useState<number>(0);
   const [hasWon, setHasWon] = useState<boolean>(false);
@@ -33,6 +35,51 @@ const App: React.FC = () => {
   const [screen, setScreen] = useState<'splash' | 'menu' | 'difficulty' | 'game' | 'leaderboard'>('splash');
   const [loadingProgress, setLoadingProgress] = useState<number>(0);
   const [viewMode, setViewMode] = useState<'3d' | '2d'>('3d');
+
+  // Transition animation states for "pulling out" effect
+  const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
+  const [transitionProgress, setTransitionProgress] = useState<number>(0);
+  const [transitionSlice, setTransitionSlice] = useState<{ axis: FocusAxis; index: number } | null>(null);
+
+  const triggerTransition = (axis: FocusAxis, index: number) => {
+    // If already in 2D, just switch the slice immediately
+    if (viewMode === '2d') {
+      setFocusAxis(axis);
+      setActiveLayer(index);
+      setClickedSlice(null);
+      return;
+    }
+
+    setFocusAxis(axis);
+    setActiveLayer(index);
+    setTransitionSlice({ axis, index });
+    setIsTransitioning(true);
+    setTransitionProgress(0);
+    setClickedSlice(null);
+
+    let start: number | null = null;
+    const duration = 650; // 650ms for pulling animation
+
+    const animate = (timestamp: number) => {
+      if (!start) start = timestamp;
+      const elapsed = timestamp - start;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      // Easing function (easeOutCubic)
+      const easeProgress = 1 - Math.pow(1 - progress, 3);
+      setTransitionProgress(easeProgress);
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        setViewMode('2d');
+        setIsTransitioning(false);
+        setTransitionProgress(0);
+        setTransitionSlice(null);
+      }
+    };
+    requestAnimationFrame(animate);
+  };
 
   // Reset viewMode to 3d if activeLayer becomes 'all'
   useEffect(() => {
@@ -94,9 +141,10 @@ const App: React.FC = () => {
     const newBoard = generatePuzzle(difficulty);
     setBoard(newBoard);
     setSelectedCell(null);
-    setActiveLayer(0);
+    setActiveLayer('all');
     setFocusAxis('Z');
     setHoveredSlice(null);
+    setClickedSlice(null);
     setIsNotesMode(false);
     setTimer(0);
     setMoves(0);
@@ -296,14 +344,17 @@ const App: React.FC = () => {
   }, [hasWon]);
 
   // Handle cell clicking in 3D or 2D
-  const handleSelectCell = (x: number, y: number, z: number) => {
-    // If clicking a cell in 3D and a hovered slice is registered, switch active slice to it
-    const activeHover = hoveredSliceRef.current;
-    if (activeHover) {
-      setFocusAxis(activeHover.axis);
-      setActiveLayer(activeHover.index);
-    }
+  const handleSelectCell = (x: number, y: number, z: number, axis?: FocusAxis, index?: number) => {
     setSelectedCell({ x, y, z });
+
+    // If clicking a cell in 3D, lock that slice
+    if (viewMode === '3d') {
+      const activeHover = hoveredSliceRef.current;
+      const targetAxis = axis || (activeHover ? activeHover.axis : focusAxis);
+      const targetIndex = index !== undefined ? index : (activeHover ? activeHover.index : (activeLayer === 'all' ? 0 : activeLayer));
+      
+      setClickedSlice({ axis: targetAxis, index: targetIndex });
+    }
   };
 
   const handleHoverSlice = (axis: FocusAxis | null, index: number | null) => {
@@ -315,8 +366,7 @@ const App: React.FC = () => {
   };
 
   const handleSelectLayer = (axis: FocusAxis, layer: number) => {
-    setFocusAxis(axis);
-    setActiveLayer(layer);
+    triggerTransition(axis, layer);
   };
 
   if (screen === 'splash') {
@@ -520,29 +570,32 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="gameplay-container">
-      {/* Top Header Bar */}
-      <header className="game-header-bar">
-        <div className="brand-block">
-          <button className="icon-btn back-btn" onClick={() => setScreen('menu')} title="Quit to Menu">
-            ←
-          </button>
-          <div>
-            <h1 className="game-title glow-cyan-text">SUDOKU DASH 3D</h1>
-            <div className="game-subtitle">9x9x9 Multi-Layer Sudoku</div>
+    <>
+    <div className={`gameplay-container viewmode-${viewMode}`}>
+      {/* Sidebar panel */}
+      <aside className="game-sidebar glass-panel">
+        {/* Top Header Bar */}
+        <header className="game-header-bar">
+          <div className="brand-block">
+            <button className="icon-btn back-btn" onClick={() => setScreen('menu')} title="Quit to Menu">
+              ←
+            </button>
+            <div>
+              <h1 className="game-title glow-cyan-text">SUDOKU DASH 3D</h1>
+              <div className="game-subtitle">9x9x9 Multi-Layer Sudoku</div>
+            </div>
           </div>
-        </div>
-        <button
-          className="icon-btn theme-toggle-btn"
-          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          title={theme === 'dark' ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
-        >
-          {theme === 'dark' ? '☀️' : '🌙'}
-        </button>
-      </header>
+          <button
+            className="icon-btn theme-toggle-btn"
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            title={theme === 'dark' ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
+          >
+            {theme === 'dark' ? '☀️' : '🌙'}
+          </button>
+        </header>
 
-      {/* Stats HUD Card */}
-      <div className="game-hud-bar glass-panel">
+        {/* Stats HUD Card */}
+        <div className="game-hud-bar">
         <div className="hud-item difficulty">
           <span className="hud-icon">🧠</span>
           <div className="hud-content">
@@ -580,52 +633,8 @@ const App: React.FC = () => {
         </div>
       </div>
 
-      {/* Active Slice Banner */}
-      <div className="active-slice-title">
-        <h2>{activeLayer === 'all' ? '3D View: All Slices' : `Slice View: ${focusAxis}${activeLayer + 1}`}</h2>
-        <p className="active-slice-sub">Focus: {focusAxis} Plane</p>
-      </div>
-
-      {/* Viewport Container */}
-      <div className="game-viewport-container glass-panel">
-        {viewMode === '3d' ? (
-          <GameCanvas
-            board={board}
-            selectedCell={selectedCell}
-            activeLayer={activeLayer}
-            focusAxis={focusAxis}
-            onSelectCell={handleSelectCell}
-            hoveredSlice={hoveredSlice}
-            onHoverSlice={handleHoverSlice}
-            glowingCells={glowingCells}
-            theme={theme}
-          />
-        ) : (
-          <Board2D
-            board={board}
-            selectedCell={selectedCell}
-            activeLayer={activeLayer}
-            focusAxis={focusAxis}
-            onSelectCell={handleSelectCell}
-            onSelectLayer={handleSelectLayer}
-            isNotesMode={isNotesMode}
-            glowingCells={glowingCells}
-          />
-        )}
-
-        {/* View Mode Toggle button (only shown when not 'all' slices) */}
-        {activeLayer !== 'all' && (
-          <button
-            className="viewport-viewmode-toggle glass-panel"
-            onClick={() => setViewMode(viewMode === '3d' ? '2d' : '3d')}
-          >
-            {viewMode === '3d' ? '🔍 Switch to 2D' : '📦 Switch to 3D'}
-          </button>
-        )}
-      </div>
-
       {/* Controls Container */}
-      <div className="game-controls-panel glass-panel">
+      <div className="game-controls-panel">
         {/* Row 1: Focus Axis */}
         <div className="control-section">
           <div className="control-section-title">Focus Axis</div>
@@ -659,29 +668,54 @@ const App: React.FC = () => {
               : `${focusAxis} Layer: ${activeLayer + 1}`}
           </div>
           <div className="layers-control-grid">
-            {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((layerIdx) => (
-              <button
-                key={layerIdx}
-                className={`btn layer-btn ${activeLayer === layerIdx ? 'active' : ''}`}
-                onClick={() => {
-                  setActiveLayer(layerIdx);
-                  setViewMode('3d');
-                }}
-              >
-                {focusAxis}{layerIdx + 1}
-              </button>
-            ))}
+            {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((layerIdx) => {
+              const isHighlight = clickedSlice && clickedSlice.axis === focusAxis && clickedSlice.index === layerIdx;
+              return (
+                <button
+                  key={layerIdx}
+                  className={`btn layer-btn ${activeLayer === layerIdx ? 'active' : ''} ${isHighlight ? 'highlight-pulse' : ''}`}
+                  onClick={() => {
+                    triggerTransition(focusAxis, layerIdx);
+                  }}
+                >
+                  {focusAxis}{layerIdx + 1}
+                </button>
+              );
+            })}
             <button
               className={`btn layer-btn ${activeLayer === 'all' ? 'active' : ''}`}
               onClick={() => {
                 setActiveLayer('all');
                 setViewMode('3d');
+                setClickedSlice(null);
               }}
+              style={activeLayer !== 'all' ? { 
+                fontSize: '9px',
+                padding: '4px 2px',
+                lineHeight: '1.1',
+                background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
+                color: '#fff',
+                border: 'none',
+                fontWeight: 'bold'
+              } : {}}
             >
-              All
+              {activeLayer === 'all' ? 'All' : 'Switch to 3D'}
             </button>
           </div>
         </div>
+
+        {/* Clicked Slice Status Banner */}
+        {clickedSlice && (
+          <div className="clicked-slice-banner pulse-border">
+            <span className="slice-label">🎯 Clicked: {clickedSlice.axis}{clickedSlice.index + 1}</span>
+            <button 
+              className="btn focus-slice-btn" 
+              onClick={() => triggerTransition(clickedSlice.axis, clickedSlice.index)}
+            >
+              📂 Pull to 2D
+            </button>
+          </div>
+        )}
 
         {/* Row 3: Selected Cell coordinate banner */}
         <div className="selected-cell-banner">
@@ -694,6 +728,7 @@ const App: React.FC = () => {
 
         {/* Row 4: Input mode tab */}
         <div className="control-section">
+          <div className="control-section-title">Input Mode</div>
           <div className="segmented-control mode-tabs">
             <button
               className={`btn mode-btn ${!isNotesMode ? 'active' : ''}`}
@@ -706,6 +741,25 @@ const App: React.FC = () => {
               onClick={() => setIsNotesMode(true)}
             >
               Notes
+            </button>
+          </div>
+        </div>
+
+        {/* Row 4.5: Gameplay Assist toggle */}
+        <div className="control-section">
+          <div className="control-section-title">Gameplay Assist</div>
+          <div className="segmented-control mode-tabs">
+            <button
+              className={`btn mode-btn ${!isAssistMode ? 'active' : ''}`}
+              onClick={() => setIsAssistMode(false)}
+            >
+              Assist Off
+            </button>
+            <button
+              className={`btn mode-btn ${isAssistMode ? 'active' : ''}`}
+              onClick={() => setIsAssistMode(true)}
+            >
+              Assist On
             </button>
           </div>
         </div>
@@ -737,6 +791,45 @@ const App: React.FC = () => {
             New Game
           </button>
         </div>
+      </div>
+      </aside>
+
+      {/* Active Slice Banner */}
+      <div className="active-slice-title">
+        <h2>{activeLayer === 'all' ? '3D View: All Slices' : `Slice View: ${focusAxis}${activeLayer + 1}`}</h2>
+        <p className="active-slice-sub">Focus: {focusAxis} Plane</p>
+      </div>
+
+      {/* Viewport Container */}
+      <div className="game-viewport-container glass-panel">
+        {viewMode === '3d' || isTransitioning ? (
+          <GameCanvas
+            board={board}
+            selectedCell={selectedCell}
+            activeLayer={activeLayer}
+            focusAxis={focusAxis}
+            onSelectCell={handleSelectCell}
+            hoveredSlice={hoveredSlice}
+            onHoverSlice={handleHoverSlice}
+            glowingCells={glowingCells}
+            theme={theme}
+            isTransitioning={isTransitioning}
+            transitionProgress={transitionProgress}
+            transitionSlice={transitionSlice}
+          />
+        ) : (
+          <Board2D
+            board={board}
+            selectedCell={selectedCell}
+            activeLayer={activeLayer}
+            focusAxis={focusAxis}
+            onSelectCell={handleSelectCell}
+            onSelectLayer={handleSelectLayer}
+            isNotesMode={isNotesMode}
+            glowingCells={glowingCells}
+            isAssistMode={isAssistMode}
+          />
+        )}
       </div>
     </div>
 
@@ -840,7 +933,7 @@ const App: React.FC = () => {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 

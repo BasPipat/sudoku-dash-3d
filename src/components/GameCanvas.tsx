@@ -9,11 +9,14 @@ interface GameCanvasProps {
   selectedCell: SelectedCell | null;
   activeLayer: number | 'all';
   focusAxis: FocusAxis;
-  onSelectCell: (x: number, y: number, z: number) => void;
+  onSelectCell: (x: number, y: number, z: number, axis?: FocusAxis, index?: number) => void;
   hoveredSlice: { axis: FocusAxis; index: number } | null;
   onHoverSlice: (axis: FocusAxis | null, index: number | null) => void;
   glowingCells: Set<string>;
   theme: 'dark' | 'light';
+  isTransitioning?: boolean;
+  transitionProgress?: number;
+  transitionSlice?: { axis: FocusAxis; index: number } | null;
 }
 
 export const GameCanvas: React.FC<GameCanvasProps> = ({
@@ -26,6 +29,9 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
   onHoverSlice,
   glowingCells,
   theme,
+  isTransitioning = false,
+  transitionProgress = 0,
+  transitionSlice = null,
 }) => {
   const planeLabel = {
     Z: 'X / Y plane (Z slices)',
@@ -44,6 +50,13 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
         <span>{planeLabel}</span>
         <strong>{layerLabel}</strong>
       </div>
+
+      {hoveredSlice && !isTransitioning && (
+        <div className="hovered-slice-overlay">
+          <span>Slice: {hoveredSlice.axis}{hoveredSlice.index + 1}</span>
+        </div>
+      )}
+
       <Canvas
         camera={{ position: [9, 10, 15], fov: 38, near: 0.1, far: 80 }}
         dpr={[1, 1.8]}
@@ -67,6 +80,9 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
           hoveredSlice={hoveredSlice}
           onHoverSlice={onHoverSlice}
           glowingCells={glowingCells}
+          isTransitioning={isTransitioning}
+          transitionProgress={transitionProgress}
+          transitionSlice={transitionSlice}
         />
 
         <OrbitControls

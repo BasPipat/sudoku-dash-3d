@@ -169,8 +169,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <button
             className={`btn layer-btn ${activeLayer === 'all' ? 'active' : ''}`}
             onClick={() => setActiveLayer('all')}
+            style={activeLayer !== 'all' ? { 
+              fontSize: '9px',
+              padding: '4px 2px',
+              lineHeight: '1.1',
+              background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
+              color: '#fff',
+              border: 'none',
+              fontWeight: 'bold'
+            } : {}}
           >
-            All
+            {activeLayer === 'all' ? 'All' : 'Switch to 3D'}
           </button>
         </div>
       </div>
