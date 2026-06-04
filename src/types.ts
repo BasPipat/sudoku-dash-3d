@@ -1,42 +1,19 @@
-import * as THREE from 'three'
-
-export type FaceName = 'U' | 'D' | 'L' | 'R' | 'F' | 'B' | 'M' | 'E' | 'S'
-
-export type SliceName = 'M' | 'S' | 'E'
-
-export type ControlName =
-  | 'front'
-  | 'down'
-  | 'right'
-  | 'back'
-  | 'up'
-  | 'left'
-  | 'middle'
-  | 'standing'
-  | 'equatorial'
-
-export interface PegatineTextures {
-  red: THREE.Texture
-  orange: THREE.Texture
-  blue: THREE.Texture
-  green: THREE.Texture
-  white: THREE.Texture
-  yellow: THREE.Texture
+export interface CellState {
+  value: number; // 0 represents empty, 1-9 for filled
+  isOriginal: boolean; // pre-filled/clue cell
+  isError: boolean; // highlights red when duplicate is found
+  solvedValue: number; // reference solution for checking completion
+  notes: number[]; // pencil marks/candidates (1-9)
 }
 
-export type PegatineColor = keyof PegatineTextures
+export type Sudoku3DBoard = CellState[][][]; // [z][y][x]
 
-export interface Move<T = FaceName> {
-  faceName: T
-  inversed: boolean
+export interface SelectedCell {
+  x: number; // 0-8
+  y: number; // 0-8
+  z: number; // 0-8
 }
 
-export type User = {
-  [key: string]: any
-}
+export type Difficulty = 'easy' | 'medium' | 'hard';
 
-export interface ApiClient {
-  logIn(email: string, password: string): Promise<void>
-  logOut(): Promise<void>
-  onAuth(callback: (u: User | null) => void): () => void
-}
+export type FocusAxis = 'X' | 'Y' | 'Z';
