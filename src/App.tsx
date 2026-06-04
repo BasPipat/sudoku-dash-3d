@@ -461,8 +461,10 @@ const App: React.FC = () => {
             }}
           >
             <div className="diff-icon">🌱</div>
-            <h3>Easy</h3>
-            <p>Perfect for beginners. More pre-filled cells to guide your solution.</p>
+            <div className="diff-card-content">
+              <h3>Easy</h3>
+              <p>Perfect for beginners. More pre-filled cells to guide your solution.</p>
+            </div>
           </div>
 
           <div 
@@ -474,8 +476,10 @@ const App: React.FC = () => {
             }}
           >
             <div className="diff-icon">⚡</div>
-            <h3>Medium</h3>
-            <p>A balanced challenge. Requires standard coordinate slicing logic.</p>
+            <div className="diff-card-content">
+              <h3>Medium</h3>
+              <p>A balanced challenge. Requires standard coordinate slicing logic.</p>
+            </div>
           </div>
 
           <div 
@@ -487,8 +491,10 @@ const App: React.FC = () => {
             }}
           >
             <div className="diff-icon">🔥</div>
-            <h3>Hard</h3>
-            <p>For Sudoku masters. Very few prefilled cells, testing your multi-dimensional logic.</p>
+            <div className="diff-card-content">
+              <h3>Hard</h3>
+              <p>For Sudoku masters. Very few prefilled cells, testing your multi-dimensional logic.</p>
+            </div>
           </div>
         </div>
       </div>
