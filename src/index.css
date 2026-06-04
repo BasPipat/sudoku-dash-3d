@@ -779,6 +779,67 @@ h1.game-title {
   text-shadow: none;
 }
 
+/* ── Number-highlight mode: pressing a keypad digit highlights all matching cells ── */
+.cell-2d.num-highlighted-cell:not(.selected) {
+  background: rgba(6, 182, 212, 0.18) !important;
+  border-color: #06b6d4 !important;
+  box-shadow: inset 0 0 10px rgba(6, 182, 212, 0.35), 0 0 8px rgba(6, 182, 212, 0.15) !important;
+}
+
+.cell-2d.num-highlighted-cell:not(.selected) .cell-value-2d {
+  color: #22d3ee !important;
+  text-shadow: 0 0 8px rgba(34, 211, 238, 0.7);
+}
+
+/* Original cells highlighted by number */
+.cell-2d.original.num-highlighted-cell:not(.selected) {
+  background: rgba(6, 182, 212, 0.25) !important;
+  border-color: #0ea5e9 !important;
+}
+
+.cell-2d.original.num-highlighted-cell:not(.selected) .cell-value-2d {
+  color: #0ea5e9 !important;
+  text-shadow: 0 0 8px rgba(14, 165, 233, 0.6);
+}
+
+/* ── Keypad button states ── */
+
+/* Number is "complete" in the current slice — dim it out */
+.keypad-btn-val.num-complete {
+  opacity: 0.35 !important;
+  background: rgba(16, 185, 129, 0.08) !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+  color: #10b981 !important;
+  cursor: default;
+  position: relative;
+}
+
+/* Small green tick badge on completed numbers */
+.keypad-btn-val.num-complete::after {
+  content: '✓';
+  position: absolute;
+  top: 1px;
+  right: 3px;
+  font-size: 7px;
+  color: #10b981;
+  font-weight: 900;
+  line-height: 1;
+}
+
+/* Number is currently highlighted — glowing cyan ring */
+.keypad-btn-val.num-highlighted {
+  background: rgba(6, 182, 212, 0.15) !important;
+  border-color: #06b6d4 !important;
+  color: #22d3ee !important;
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.4), inset 0 0 6px rgba(6, 182, 212, 0.15) !important;
+  font-weight: 800 !important;
+}
+
+/* Complete + highlighted (edge case) */
+.keypad-btn-val.num-complete.num-highlighted {
+  opacity: 0.7 !important;
+}
+
 /* Light Theme overrides for same-value original cells */
 :root.light-theme .cell-2d.original.same-value:not(.selected) {
   background: #fef08a !important;

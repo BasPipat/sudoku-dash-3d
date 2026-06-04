@@ -19,6 +19,7 @@ const App: React.FC = () => {
   const [clickedSlice, setClickedSlice] = useState<{ axis: FocusAxis; index: number } | null>(null);
   const [isNotesMode, setIsNotesMode] = useState<boolean>(false);
   const [isAssistMode, setIsAssistMode] = useState<boolean>(true);
+  const [highlightedNumber, setHighlightedNumber] = useState<number | null>(null);
   const [timer, setTimer] = useState<number>(0);
   const [moves, setMoves] = useState<number>(0);
   const [hasWon, setHasWon] = useState<boolean>(false);
@@ -109,6 +110,24 @@ const App: React.FC = () => {
 
   // Compute glowing cells
   const glowingCells = useMemo(() => getGlowingCells(board), [board]);
+
+  // Count how many times each digit appears in the current 2D slice
+  const completedNumbers = useMemo((): Set<number> => {
+    if (activeLayer === 'all') return new Set();
+    const counts: Record<number, number> = {};
+    for (let row = 0; row < 9; row++) {
+      for (let col = 0; col < 9; col++) {
+        let x: number, y: number, z: number;
+        const layerIdx = activeLayer as number;
+        if (focusAxis === 'X') { x = layerIdx; y = row; z = col; }
+        else if (focusAxis === 'Y') { x = col; y = layerIdx; z = row; }
+        else { x = col; y = row; z = layerIdx; }
+        const v = board[z][y][x].value;
+        if (v > 0) counts[v] = (counts[v] ?? 0) + 1;
+      }
+    }
+    return new Set(Object.entries(counts).filter(([, c]) => c >= 9).map(([n]) => Number(n)));
+  }, [board, activeLayer, focusAxis]);
 
   // Refs to allow keyboard event listeners to access fresh state
   const selectedCellRef = useRef<SelectedCell | null>(null);
@@ -762,16 +781,28 @@ const App: React.FC = () => {
 
         {/* Row 5: Keypad */}
         <div className="keypad-grid-controls">
-          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
-            <button
-              key={num}
-              className="keypad-btn-val"
-              onClick={() => handleNumberInput(num)}
-              disabled={!selectedCell}
-            >
-              {num}
-            </button>
-          ))}
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => {
+            const isComplete = completedNumbers.has(num);
+            const isHighlighted = highlightedNumber === num;
+            return (
+              <button
+                key={num}
+                className={`keypad-btn-val ${
+                  isComplete ? 'num-complete' : ''
+                } ${
+                  isHighlighted ? 'num-highlighted' : ''
+                }`}
+                onClick={() => {
+                  // Toggle highlight; still allow number input if cell selected
+                  setHighlightedNumber(highlightedNumber === num ? null : num);
+                  if (selectedCell) handleNumberInput(num);
+                }}
+                disabled={false}
+              >
+                {num}
+              </button>
+            );
+          })}
         </div>
 
         {/* Row 6: Actions */}
@@ -822,6 +853,7 @@ const App: React.FC = () => {
             onSelectCell={handleSelectCell}
             glowingCells={glowingCells}
             isAssistMode={isAssistMode}
+            highlightedNumber={highlightedNumber}
           />
         )}
       </div>

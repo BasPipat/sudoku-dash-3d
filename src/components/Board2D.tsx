@@ -9,6 +9,7 @@ interface Board2DProps {
   onSelectCell: (x: number, y: number, z: number) => void;
   glowingCells: Set<string>;
   isAssistMode: boolean;
+  highlightedNumber: number | null;
 }
 
 export const Board2D: React.FC<Board2DProps> = ({
@@ -19,6 +20,7 @@ export const Board2D: React.FC<Board2DProps> = ({
   onSelectCell,
   glowingCells,
   isAssistMode,
+  highlightedNumber,
 }) => {
   // Helper to map 2D cell click/coords to 3D cell coords
   const map2DTo3D = (row: number, col: number): { x: number; y: number; z: number } => {
@@ -121,9 +123,12 @@ export const Board2D: React.FC<Board2DProps> = ({
                   (rowIdx === selected2DCoords.row || colIdx === selected2DCoords.col);
                 const isSameValue = isAssistMode && isSelectedInActiveLayer && selectedValue > 0 && cell.value === selectedValue && !isSelected;
 
+                const isHighlightedNum = highlightedNumber !== null && cell.value === highlightedNumber && !isSelected;
+
                 const assistClasses = [
                   isCrosshair ? 'crosshair' : '',
                   isSameValue ? 'same-value' : '',
+                  isHighlightedNum ? 'num-highlighted-cell' : '',
                 ].filter(Boolean).join(' ');
 
                 return (
