@@ -827,8 +827,11 @@ const App: React.FC = () => {
         <p className="active-slice-sub">Focus: {focusAxis} Plane</p>
       </div>
 
-      {/* Viewport Container */}
-      <div className="game-viewport-container glass-panel">
+      {/* Viewport Container — clicking empty area clears highlighted number */}
+      <div
+        className="game-viewport-container glass-panel"
+        onClick={() => setHighlightedNumber(null)}
+      >
         {viewMode === '3d' || isTransitioning ? (
           <GameCanvas
             board={board}

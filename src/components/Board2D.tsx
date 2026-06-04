@@ -91,7 +91,7 @@ export const Board2D: React.FC<Board2DProps> = ({
   const activeLabel = activeLayer === 'all' ? 'All' : `${focusAxis}${activeLayer + 1}`;
 
   return (
-    <div className="board-2d-pane glass-panel">
+    <div className="board-2d-pane glass-panel" onClick={(e) => e.stopPropagation()}>
       {/* Selected Slice Header */}
       <div className="board-2d-header">
         <h2>Slice View: <span className="active-slice-name">{activeLabel}</span></h2>
