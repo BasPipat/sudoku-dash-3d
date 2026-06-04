@@ -358,6 +358,7 @@ const App: React.FC = () => {
   // Handle cell clicking in 3D or 2D
   const handleSelectCell = (x: number, y: number, z: number, axis?: FocusAxis, index?: number) => {
     setSelectedCell({ x, y, z });
+    setHighlightedNumber(null); // entering edit mode clears number scan highlight
 
     // If clicking a cell in 3D, lock that slice
     if (viewMode === '3d') {
@@ -793,9 +794,14 @@ const App: React.FC = () => {
                   isHighlighted ? 'num-highlighted' : ''
                 }`}
                 onClick={() => {
-                  // Toggle highlight; still allow number input if cell selected
-                  setHighlightedNumber(highlightedNumber === num ? null : num);
-                  if (selectedCell) handleNumberInput(num);
+                  if (selectedCell) {
+                    // Cell is selected → enter the digit, clear highlight
+                    handleNumberInput(num);
+                    setHighlightedNumber(null);
+                  } else {
+                    // No cell selected → toggle highlight only
+                    setHighlightedNumber(highlightedNumber === num ? null : num);
+                  }
                 }}
                 disabled={false}
               >
