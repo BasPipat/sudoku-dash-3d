@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import type { ThreeEvent } from '@react-three/fiber';
-import { Text } from '@react-three/drei';
+import { Billboard, Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { BOARD_CELL_DEPTH, BOARD_CELL_SIZE } from './boardConfig';
 import type { FocusAxis } from '../types';
@@ -80,7 +80,7 @@ export const Cell: React.FC<CellProps> = ({
         emissive: '#0f766e',
         emissiveIntensity: 0.8,
         opacity: 0.95,
-        textColor: '#041014',
+        textColor: '#000000', // Solid black on cyan background is most readable
         transparent: false,
       };
     }
@@ -92,7 +92,7 @@ export const Cell: React.FC<CellProps> = ({
         emissive: '#881337',
         emissiveIntensity: 0.55,
         opacity: 0.95,
-        textColor: '#ffffff',
+        textColor: '#ffffff', // Clean white text on red cell
         transparent: false,
       };
     }
@@ -104,7 +104,7 @@ export const Cell: React.FC<CellProps> = ({
         emissive: '#059669',
         emissiveIntensity: 1.5,
         opacity: 0.95,
-        textColor: '#ffffff',
+        textColor: '#ffffff', // Clean white text on green cell
         transparent: false,
       };
     }
@@ -118,7 +118,7 @@ export const Cell: React.FC<CellProps> = ({
           emissive: '#7c2d12',
           emissiveIntensity: 0.25,
           opacity: 0.45,
-          textColor: '#f97316',
+          textColor: '#ffd166', // Glowing gold for hovered slices
           transparent: true,
         };
       }
@@ -128,7 +128,7 @@ export const Cell: React.FC<CellProps> = ({
         emissive: '#000000',
         emissiveIntensity: 0,
         opacity: isOriginal ? 0.32 : 0.16,
-        textColor: isOriginal ? '#e2e8f0' : '#94a3b8',
+        textColor: isOriginal ? '#ffffff' : '#00e5ff', // White for clues, Cyan for user values
         transparent: true,
       };
     }
@@ -141,7 +141,7 @@ export const Cell: React.FC<CellProps> = ({
         emissive: '#000000',
         emissiveIntensity: 0,
         opacity: 0.85,
-        textColor: isOriginal ? '#151a21' : '#25315a',
+        textColor: isOriginal ? '#ffffff' : '#00e5ff', // White for clues, Cyan for user values
         transparent: false,
       };
     }
@@ -153,7 +153,7 @@ export const Cell: React.FC<CellProps> = ({
         emissive: '#7c2d12',
         emissiveIntensity: 0.25,
         opacity: 0.55,
-        textColor: '#7c2d12',
+        textColor: '#ffd166', // Glowing gold for hovered slices
         transparent: true,
       };
     }
@@ -281,6 +281,20 @@ export const Cell: React.FC<CellProps> = ({
     return baseOpacity;
   }, [visual.opacity, globalTransitionActive, transitionProgress, isTransitioning]);
 
+  // Compute text opacity separately to keep numbers bright and readable
+  const textOpacity = useMemo(() => {
+    // If not active slice, not selected, not hovered in slice mode, dim text heavily
+    if (activeLayer !== 'all' && !isActiveSlice && !isHoveredSlice && !isSelected) {
+      return 0.05;
+    }
+    if (globalTransitionActive && transitionProgress !== undefined) {
+      if (!isTransitioning) {
+        return 0.9 * (1 - transitionProgress);
+      }
+    }
+    return 0.95;
+  }, [activeLayer, isActiveSlice, isHoveredSlice, isSelected, globalTransitionActive, transitionProgress, isTransitioning]);
+
   return (
     <group
       position={animatedPosition}
@@ -317,21 +331,33 @@ export const Cell: React.FC<CellProps> = ({
         />
       </lineSegments>
 
-      {/* Single Center Text */}
+      {/* Single Center Text with Billboard effect (always faces camera) */}
       {(value > 0 || showNotes) && (
-        <Text
+        <Billboard
           position={[0, 0, 0]}
-          fontSize={0.48}
-          color={visual.textColor}
-          fillOpacity={opacity}
-          anchorX="center"
-          anchorY="middle"
-          outlineColor={isGlowing ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.15)'}
-          outlineWidth={isSelected || isGlowing ? 0.01 : 0}
-          renderOrder={renderOrder + 2}
+          follow={true}
         >
-          {value > 0 ? value.toString() : notesText}
-        </Text>
+          <Text
+            fontSize={0.48}
+            color={visual.textColor}
+            fillOpacity={textOpacity}
+            anchorX="center"
+            anchorY="middle"
+            outlineColor={
+              isError
+                ? 'rgba(255, 51, 102, 0.4)'
+                : isGlowing
+                ? 'rgba(16, 185, 129, 0.4)'
+                : isSelected
+                ? 'rgba(45, 212, 191, 0.5)'
+                : 'rgba(0, 0, 0, 0.85)'
+            }
+            outlineWidth={0.02}
+            renderOrder={renderOrder + 2}
+          >
+            {value > 0 ? value.toString() : notesText}
+          </Text>
+        </Billboard>
       )}
     </group>
   );

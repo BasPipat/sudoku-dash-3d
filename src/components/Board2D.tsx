@@ -181,7 +181,7 @@ export const Board2D: React.FC<Board2DProps> = ({
                 return (
                   <div
                     key={colIdx}
-                    className={`cell-2d ${isSelected ? 'selected' : ''} ${cell.isOriginal ? 'original' : ''} ${cell.isError ? 'error' : ''} ${isGlowing ? 'glowing' : ''} ${assistClasses} ${borderClasses}`}
+                    className={`cell-2d ${isSelected ? 'selected' : ''} ${cell.isOriginal ? 'original' : ''} ${cell.isError ? 'error' : ''} ${hasValue ? 'has-value' : ''} ${isGlowing ? 'glowing' : ''} ${assistClasses} ${borderClasses}`}
                     onClick={() => handleCellClick(rowIdx, colIdx)}
                   >
                     {hasValue ? (
