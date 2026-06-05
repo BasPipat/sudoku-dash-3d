@@ -815,6 +815,22 @@ const App: React.FC = () => {
           })}
         </div>
 
+        {/* Row 5.5: Deselect Button */}
+        {(selectedCell || highlightedNumber !== null) && (
+          <button
+            className="action-btn deselect-cute"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedCell(null);
+              setHighlightedNumber(null);
+            }}
+            title="Deselect or Clear Highlight"
+            style={{ width: '100%', marginTop: '10px' }}
+          >
+            🖐️ ปล่อยมือ
+          </button>
+        )}
+
         {/* Row 6: Actions */}
         <div className="action-row-buttons">
           <button
@@ -868,20 +884,6 @@ const App: React.FC = () => {
             isAssistMode={isAssistMode}
             highlightedNumber={highlightedNumber}
           />
-        )}
-
-        {(selectedCell || highlightedNumber !== null) && (
-          <button
-            className="floating-deselect-btn"
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelectedCell(null);
-              setHighlightedNumber(null);
-            }}
-            title="Deselect or Clear Highlight"
-          >
-            <span>🖐️</span> Deselect
-          </button>
         )}
       </div>
     </div>
