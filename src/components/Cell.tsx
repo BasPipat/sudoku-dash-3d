@@ -236,20 +236,50 @@ export const Cell: React.FC<CellProps> = ({
   const showFrontValue =
     value > 0 &&
     (isGlowing ||
+      isSelected ||
       (activeLayer === 'all' && z === 0) ||
-      (activeLayer !== 'all' && focusAxis === 'Z' && z === activeLayer));
+      (activeLayer !== 'all' && focusAxis === 'Z' && z === activeLayer) ||
+      (activeLayer !== 'all' && focusAxis !== 'Z' && isActiveSlice && z === 0));
+
+  const showBackValue =
+    value > 0 &&
+    (isGlowing ||
+      isSelected ||
+      (activeLayer === 'all' && z === 8) ||
+      (activeLayer !== 'all' && focusAxis === 'Z' && z === activeLayer) ||
+      (activeLayer !== 'all' && focusAxis !== 'Z' && isActiveSlice && z === 8));
 
   const showTopValue =
     value > 0 &&
     (isGlowing ||
+      isSelected ||
       (activeLayer === 'all' && y === 0) ||
-      (activeLayer !== 'all' && focusAxis === 'Y' && y === activeLayer));
+      (activeLayer !== 'all' && focusAxis === 'Y' && y === activeLayer) ||
+      (activeLayer !== 'all' && focusAxis !== 'Y' && isActiveSlice && y === 0));
+
+  const showBottomValue =
+    value > 0 &&
+    (isGlowing ||
+      isSelected ||
+      (activeLayer === 'all' && y === 8) ||
+      (activeLayer !== 'all' && focusAxis === 'Y' && y === activeLayer) ||
+      (activeLayer !== 'all' && focusAxis !== 'Y' && isActiveSlice && y === 8));
 
   const showRightValue =
     value > 0 &&
     (isGlowing ||
+      isSelected ||
       (activeLayer === 'all' && x === 8) ||
-      (activeLayer !== 'all' && focusAxis === 'X' && x === activeLayer));
+      (activeLayer !== 'all' && focusAxis === 'X' && x === activeLayer) ||
+      (activeLayer !== 'all' && focusAxis !== 'X' && isActiveSlice && x === 8));
+
+  const showLeftValue =
+    value > 0 &&
+    (isGlowing ||
+      isSelected ||
+      (activeLayer === 'all' && x === 0) ||
+      (activeLayer !== 'all' && focusAxis === 'X' && x === activeLayer) ||
+      (activeLayer !== 'all' && focusAxis !== 'X' && isActiveSlice && x === 0));
 
   const showNotes =
     value === 0 &&
@@ -353,6 +383,24 @@ export const Cell: React.FC<CellProps> = ({
         </Text>
       )}
 
+      {/* Back Face Text */}
+      {(showBackValue || (showNotes && focusAxis === 'Z')) && (
+        <Text
+          position={[0, 0, -BOARD_CELL_DEPTH / 2 - 0.015]}
+          rotation={[0, Math.PI, 0]}
+          fontSize={0.42}
+          color={visual.textColor}
+          fillOpacity={opacity}
+          anchorX="center"
+          anchorY="middle"
+          outlineColor={isGlowing ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.15)'}
+          outlineWidth={isSelected || isGlowing ? 0.01 : 0}
+          renderOrder={renderOrder + 2}
+        >
+          {value > 0 ? value.toString() : notesText}
+        </Text>
+      )}
+
       {/* Top Face Text */}
       {(showTopValue || (showNotes && focusAxis === 'Y')) && (
         <Text
@@ -371,11 +419,47 @@ export const Cell: React.FC<CellProps> = ({
         </Text>
       )}
 
+      {/* Bottom Face Text */}
+      {(showBottomValue || (showNotes && focusAxis === 'Y')) && (
+        <Text
+          position={[0, -BOARD_CELL_SIZE / 2 - 0.015, 0]}
+          rotation={[Math.PI / 2, 0, 0]}
+          fontSize={0.42}
+          color={visual.textColor}
+          fillOpacity={opacity}
+          anchorX="center"
+          anchorY="middle"
+          outlineColor={isGlowing ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.15)'}
+          outlineWidth={isSelected || isGlowing ? 0.01 : 0}
+          renderOrder={renderOrder + 2}
+        >
+          {value > 0 ? value.toString() : notesText}
+        </Text>
+      )}
+
       {/* Right Face Text */}
       {(showRightValue || (showNotes && focusAxis === 'X')) && (
         <Text
           position={[BOARD_CELL_SIZE / 2 + 0.015, 0, 0]}
           rotation={[0, Math.PI / 2, 0]}
+          fontSize={0.42}
+          color={visual.textColor}
+          fillOpacity={opacity}
+          anchorX="center"
+          anchorY="middle"
+          outlineColor={isGlowing ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.15)'}
+          outlineWidth={isSelected || isGlowing ? 0.01 : 0}
+          renderOrder={renderOrder + 2}
+        >
+          {value > 0 ? value.toString() : notesText}
+        </Text>
+      )}
+
+      {/* Left Face Text */}
+      {(showLeftValue || (showNotes && focusAxis === 'X')) && (
+        <Text
+          position={[-BOARD_CELL_SIZE / 2 - 0.015, 0, 0]}
+          rotation={[0, -Math.PI / 2, 0]}
           fontSize={0.42}
           color={visual.textColor}
           fillOpacity={opacity}
