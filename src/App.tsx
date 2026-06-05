@@ -357,6 +357,10 @@ const App: React.FC = () => {
 
   // Handle cell clicking in 3D or 2D
   const handleSelectCell = (x: number, y: number, z: number, axis?: FocusAxis, index?: number) => {
+    if (selectedCell && selectedCell.x === x && selectedCell.y === y && selectedCell.z === z) {
+      setSelectedCell(null);
+      return;
+    }
     setSelectedCell({ x, y, z });
     setHighlightedNumber(null); // entering edit mode clears number scan highlight
 
@@ -812,7 +816,10 @@ const App: React.FC = () => {
         </div>
 
         {/* Row 6: Actions */}
-        <div className="action-row-buttons">
+        <div 
+          className="action-row-buttons" 
+          style={selectedCell ? { gridTemplateColumns: 'repeat(3, 1fr)' } : undefined}
+        >
           <button
             className="action-btn clear"
             onClick={() => handleNumberInput(0)}
@@ -820,6 +827,14 @@ const App: React.FC = () => {
           >
             CLEAR
           </button>
+          {selectedCell && (
+            <button
+              className="action-btn deselect-cute"
+              onClick={() => setSelectedCell(null)}
+            >
+              <span>🖐️</span> Deselect
+            </button>
+          )}
           <button className="action-btn new-game" onClick={handleNewGame}>
             New Game
           </button>
