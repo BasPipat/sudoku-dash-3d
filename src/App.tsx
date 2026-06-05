@@ -816,10 +816,7 @@ const App: React.FC = () => {
         </div>
 
         {/* Row 6: Actions */}
-        <div 
-          className="action-row-buttons" 
-          style={selectedCell ? { gridTemplateColumns: 'repeat(3, 1fr)' } : undefined}
-        >
+        <div className="action-row-buttons">
           <button
             className="action-btn clear"
             onClick={() => handleNumberInput(0)}
@@ -827,14 +824,6 @@ const App: React.FC = () => {
           >
             CLEAR
           </button>
-          {selectedCell && (
-            <button
-              className="action-btn deselect-cute"
-              onClick={() => setSelectedCell(null)}
-            >
-              <span>🖐️</span> Deselect
-            </button>
-          )}
           <button className="action-btn new-game" onClick={handleNewGame}>
             New Game
           </button>
@@ -879,6 +868,20 @@ const App: React.FC = () => {
             isAssistMode={isAssistMode}
             highlightedNumber={highlightedNumber}
           />
+        )}
+
+        {(selectedCell || highlightedNumber !== null) && (
+          <button
+            className="floating-deselect-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedCell(null);
+              setHighlightedNumber(null);
+            }}
+            title="Deselect or Clear Highlight"
+          >
+            <span>🖐️</span> Deselect
+          </button>
         )}
       </div>
     </div>
