@@ -25,6 +25,7 @@ const App: React.FC = () => {
   const [hasWon, setHasWon] = useState<boolean>(false);
   const [hasLost, setHasLost] = useState<boolean>(false);
   const [mistakes, setMistakes] = useState<number>(0);
+  const [hints, setHints] = useState<number>(0);
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [screen, setScreen] = useState<'splash' | 'menu' | 'difficulty' | 'game' | 'leaderboard'>('splash');
   const [loadingProgress, setLoadingProgress] = useState<number>(0);
@@ -163,6 +164,7 @@ const App: React.FC = () => {
     setHasWon(false);
     setHasLost(false);
     setMistakes(0);
+    setHints(0);
   };
 
   // Generate new game when difficulty changes
@@ -178,6 +180,36 @@ const App: React.FC = () => {
     }, 1000);
     return () => clearInterval(interval);
   }, [hasWon, hasLost]);
+
+  // Reveal the correct answer for selected cell
+  const handleHint = () => {
+    if (hints >= 3) return; // Limit to 3 hints max
+    const activeCell = selectedCellRef.current;
+    if (!activeCell) return;
+    const currentBoard = boardRef.current;
+    const cell = currentBoard[activeCell.z][activeCell.y][activeCell.x];
+    if (cell.isOriginal) return;
+    const answer = cell.solvedValue;
+    if (!answer || answer === cell.value) return;
+    // Fill in the correct answer
+    const updatedBoard = currentBoard.map((layer, zIdx) =>
+      layer.map((row, yIdx) =>
+        row.map((c, xIdx) => {
+          if (zIdx === activeCell.z && yIdx === activeCell.y && xIdx === activeCell.x) {
+            return { ...c, value: answer, notes: [] };
+          }
+          return c;
+        })
+      )
+    );
+    const validatedBoard = checkSudokuRules(updatedBoard);
+    setBoard(validatedBoard);
+    setHints((prev) => prev + 1);
+    if (checkWinCondition(validatedBoard)) {
+      setHasWon(true);
+      setSelectedCell(null);
+    }
+  };
 
   // Input number or toggle candidate notes
   const handleNumberInput = (num: number) => {
@@ -827,7 +859,7 @@ const App: React.FC = () => {
             title="Deselect or Clear Highlight"
             style={{ width: '100%', marginTop: '10px' }}
           >
-            🖐️ ปล่อยมือ
+            🖐️ Deselect
           </button>
         )}
 
@@ -840,7 +872,15 @@ const App: React.FC = () => {
           >
             CLEAR
           </button>
-          <button className="action-btn new-game" onClick={handleNewGame}>
+          <button
+            className="action-btn hint-btn"
+            onClick={handleHint}
+            disabled={hints >= 3 || !selectedCell || (selectedCell && board[selectedCell.z][selectedCell.y][selectedCell.x].isOriginal)}
+            title={`Reveal correct answer for selected cell (${3 - hints} hints left)`}
+          >
+            💡 Hint ({Math.max(0, 3 - hints)} Left)
+          </button>
+          <button className="action-btn new-game" style={{ gridColumn: '1 / -1' }} onClick={handleNewGame}>
             New Game
           </button>
         </div>

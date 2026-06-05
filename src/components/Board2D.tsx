@@ -87,8 +87,55 @@ export const Board2D: React.FC<Board2DProps> = ({
     );
   };
 
+  // Helper to extract 9 values along the depth axis (perpendicular to screen)
+  const getDepthPillarCells = () => {
+    if (!selectedCell) return [];
+    const pillar = [];
+    for (let i = 0; i < 9; i++) {
+      let cellX = selectedCell.x;
+      let cellY = selectedCell.y;
+      let cellZ = selectedCell.z;
+      let isActive = false;
+
+      if (focusAxis === 'Z') {
+        cellZ = i;
+        isActive = (activeLayer === i);
+      } else if (focusAxis === 'Y') {
+        cellY = i;
+        isActive = (activeLayer === i);
+      } else { // X
+        cellX = i;
+        isActive = (activeLayer === i);
+      }
+
+      const cell = board[cellZ][cellY][cellX];
+      pillar.push({
+        layerName: `${focusAxis}${i + 1}`,
+        value: cell.value,
+        isOriginal: cell.isOriginal,
+        isError: cell.isError,
+        isActive,
+      });
+    }
+    return pillar;
+  };
+
   // Label for active layer
   const activeLabel = activeLayer === 'all' ? 'All' : `${focusAxis}${activeLayer + 1}`;
+
+  // Screen Col and Row label helpers for the title
+  const getPillarTitleLabel = () => {
+    if (!selectedCell) return '';
+    if (focusAxis === 'Z') {
+      return `Column ${selectedCell.x + 1}, Row ${selectedCell.y + 1}`;
+    } else if (focusAxis === 'Y') {
+      return `Column ${selectedCell.x + 1}, Row ${selectedCell.z + 1}`;
+    } else {
+      return `Column ${selectedCell.z + 1}, Row ${selectedCell.y + 1}`;
+    }
+  };
+
+  const depthCells = getDepthPillarCells();
 
   return (
     <div className="board-2d-pane glass-panel" onClick={(e) => e.stopPropagation()}>
@@ -147,6 +194,27 @@ export const Board2D: React.FC<Board2DProps> = ({
               })}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Depth Pillar Preview Strip */}
+      {selectedCell && activeLayer !== 'all' && (
+        <div className="depth-pillar-container">
+          <div className="depth-pillar-title">
+            🧬 Depth View ({getPillarTitleLabel()}):
+          </div>
+          <div className="depth-pillar-row">
+            {depthCells.map((item, idx) => (
+              <div
+                key={idx}
+                className={`depth-pillar-cell ${item.isOriginal ? 'original' : ''} ${item.isError ? 'error' : ''} ${item.isActive ? 'active-layer' : ''}`}
+                title={`Value in ${item.layerName}`}
+              >
+                <span className="depth-cell-label">{item.layerName}</span>
+                <span className="depth-cell-value">{item.value > 0 ? item.value : '-'}</span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

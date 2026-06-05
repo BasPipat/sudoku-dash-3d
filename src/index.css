@@ -1597,9 +1597,168 @@ h1.game-title {
   box-shadow: 0 4px 15px rgba(0, 229, 255, 0.2);
 }
 
+/* Hint button — amber/gold with lightbulb glow */
+.action-btn.hint-btn {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.35);
+  color: #f59e0b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.action-btn.hint-btn:hover:not(:disabled) {
+  background: rgba(245, 158, 11, 0.18);
+  border-color: #f59e0b;
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.3);
+}
+
+.action-btn.hint-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* 3-column layout for action row when hint is available */
+.action-row-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+/* New Game spans full width */
+.action-btn.new-game[style*="1 / -1"] {
+  grid-column: 1 / -1;
+}
+
 .action-btn.new-game:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(0, 229, 255, 0.35);
+}
+
+/* Depth Pillar Preview Strip styles */
+.depth-pillar-container {
+  margin-top: 15px;
+  padding: 10px 8px;
+  background: rgba(15, 23, 42, 0.4);
+  border-radius: 8px;
+  border: 1px dashed rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.depth-pillar-title {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  width: 100%;
+  text-align: left;
+  padding-left: 4px;
+}
+
+.depth-pillar-row {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  width: 100%;
+  max-width: 420px;
+}
+
+.depth-pillar-cell {
+  flex: 1;
+  max-width: 38px;
+  height: 38px;
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: all 0.18s ease;
+  user-select: none;
+}
+
+/* Original pre-filled cell in depth view */
+.depth-pillar-cell.original {
+  background: var(--text-primary);
+  color: var(--bg-main) !important;
+}
+
+.depth-pillar-cell.original .depth-cell-value {
+  color: var(--bg-main) !important;
+  font-weight: 800;
+}
+
+.depth-pillar-cell.original .depth-cell-label {
+  color: rgba(15, 23, 42, 0.5);
+}
+
+/* Currently active layer highlighted */
+.depth-pillar-cell.active-layer {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.25), inset 0 0 5px rgba(0, 229, 255, 0.1);
+  background: rgba(0, 229, 255, 0.06);
+}
+
+.depth-pillar-cell.active-layer .depth-cell-label {
+  color: var(--accent-cyan);
+}
+
+/* Error cell in depth view */
+.depth-pillar-cell.error {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: #ef4444;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.2);
+}
+
+.depth-pillar-cell.error .depth-cell-value {
+  color: #fca5a5;
+  text-shadow: 0 0 5px rgba(239, 68, 68, 0.5);
+}
+
+.depth-cell-label {
+  font-size: 8px;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.depth-cell-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* Light Theme overrides for Depth Preview */
+:root.light-theme .depth-pillar-container {
+  background: rgba(15, 23, 42, 0.03);
+  border-color: rgba(15, 23, 42, 0.1);
+}
+
+:root.light-theme .depth-pillar-cell {
+  background: rgba(15, 23, 42, 0.05);
+  border-color: rgba(15, 23, 42, 0.1);
+  color: var(--bg-main);
+}
+
+:root.light-theme .depth-pillar-cell.original {
+  background: var(--bg-main);
+  color: var(--text-primary) !important;
+  border-color: var(--bg-main);
+}
+
+:root.light-theme .depth-cell-value {
+  color: var(--bg-main);
 }
 
 /* Light Theme overrides for control elements */
