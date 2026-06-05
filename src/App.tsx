@@ -37,43 +37,14 @@ const App: React.FC = () => {
   const [transitionSlice, setTransitionSlice] = useState<{ axis: FocusAxis; index: number } | null>(null);
 
   const triggerTransition = (axis: FocusAxis, index: number) => {
-    // If already in 2D, just switch the slice immediately
-    if (viewMode === '2d') {
-      setFocusAxis(axis);
-      setActiveLayer(index);
-      setClickedSlice(null);
-      return;
-    }
-
+    // Switch the slice and view mode immediately without pull-out animation lag
     setFocusAxis(axis);
     setActiveLayer(index);
-    setTransitionSlice({ axis, index });
-    setIsTransitioning(true);
-    setTransitionProgress(0);
     setClickedSlice(null);
-
-    let start: number | null = null;
-    const duration = 650; // 650ms for pulling animation
-
-    const animate = (timestamp: number) => {
-      if (!start) start = timestamp;
-      const elapsed = timestamp - start;
-      const progress = Math.min(elapsed / duration, 1);
-      
-      // Easing function (easeOutCubic)
-      const easeProgress = 1 - Math.pow(1 - progress, 3);
-      setTransitionProgress(easeProgress);
-
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      } else {
-        setViewMode('2d');
-        setIsTransitioning(false);
-        setTransitionProgress(0);
-        setTransitionSlice(null);
-      }
-    };
-    requestAnimationFrame(animate);
+    setViewMode('2d');
+    setIsTransitioning(false);
+    setTransitionProgress(0);
+    setTransitionSlice(null);
   };
 
   // Reset viewMode to 3d if activeLayer becomes 'all'
