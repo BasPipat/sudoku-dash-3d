@@ -15,41 +15,45 @@ app.use(cors());
 app.use(express.json());
 
 // ----------------------------------------------------
-// ระบบ Database Connection แบบ Serverless (ปลอดภัย ไม่ค้าง)
+// ระบบ Database Connection แบบ Serverless
 // ----------------------------------------------------
 let isConnected = false;
 
 const connectDB = async () => {
-  if (isConnected) {
-    console.log('=> [MongoDB] Using existing database connection');
-    return;
-  }
+  if (isConnected) return;
   if (!MONGODB_URI) {
     console.error('=> [MongoDB] ERROR: MONGODB_URI is missing!');
     return;
   }
 
-  console.log('=> [MongoDB] Creating new database connection...');
   try {
     const db = await mongoose.connect(MONGODB_URI);
     isConnected = db.connections[0].readyState;
-    console.log('=> [MongoDB] Successfully connected to Atlas Cloud');
+    console.log('=> [MongoDB] Connected to Atlas Cloud');
   } catch (error) {
     console.error('=> [MongoDB] Connection Error:', error);
   }
 };
 
-// ----------------------------------------------------
-// Routes (ฝัง Middleware เช็กฐานข้อมูลเฉพาะตอนจะเรียก API)
-// ----------------------------------------------------
-app.use('/api/auth', async (req, res, next) => {
+// Middleware ช่วยต่อสาย DB ก่อนเข้าสิทธิ์ Login
+const handleAuthWithDB = async (req, res, next) => {
   await connectDB();
   next();
-}, authRoutes);
+};
 
-// Health Check เอาไว้เช็กว่า Vercel รันเซิร์ฟเวอร์เราขึ้นไหม
-app.get('/api', (req, res) => {
-  res.json({ status: 'ok', message: 'Sudoku Dash 3D Backend is running on Vercel!' });
+// ----------------------------------------------------
+// Routes (ดักเผื่อไว้ทั้งแบบมี /api และไม่มี /api กัน Vercel เอ๋อ)
+// ----------------------------------------------------
+app.use('/api/auth', handleAuthWithDB, authRoutes);
+app.use('/auth', handleAuthWithDB, authRoutes);
+
+// Health Check (ดักทุกรูปแบบ ไม่ว่าจะมาเป็น /api หรือ / เพื่อให้ขึ้นหน้าจอสำเร็จแน่นอน)
+app.get(['/api', '/api/', '/'], (req, res) => {
+  res.json({
+    status: 'ok',
+    message: 'Sudoku Dash 3D Backend is running perfectly on Vercel!',
+    testedUrl: req.url
+  });
 });
 
 // ----------------------------------------------------
