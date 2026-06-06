@@ -35,16 +35,19 @@ const App: React.FC = () => {
 
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   // Handle Google OAuth client token callback
   const handleCredentialResponse = async (response: any) => {
     try {
       setIsAuthLoading(true);
+      setAuthError(null);
       const userProfile = await api.loginWithGoogle(response.credential);
       setUser(userProfile);
       console.log('Successfully logged in via Google:', userProfile.displayName);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to login via Google:', err);
+      setAuthError(err.message || 'Google authentication failed');
     } finally {
       setIsAuthLoading(false);
     }
@@ -54,6 +57,7 @@ const App: React.FC = () => {
   const handleNativeMobileLogin = async (platform: 'google-play' | 'game-center') => {
     try {
       setIsAuthLoading(true);
+      setAuthError(null);
       console.log(`Simulating Native Mobile Auto-Login for: ${platform}`);
       
       // Call Apple route with mock credentials representing local device
@@ -63,8 +67,9 @@ const App: React.FC = () => {
         displayName: platform === 'google-play' ? 'Google Play Player' : 'Game Center Player',
       });
       setUser(mockProfile);
-    } catch (err) {
+    } catch (err: any) {
       console.error(`Native ${platform} login error:`, err);
+      setAuthError(err.message || 'Native authentication failed');
     } finally {
       setIsAuthLoading(false);
     }
@@ -624,6 +629,27 @@ const App: React.FC = () => {
           <p style={{ fontSize: '13px', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
             Please sign in to access the game and synchronize your high scores with your MongoDB Cloud database.
           </p>
+
+          {authError && (
+            <div style={{
+              background: 'rgba(239, 68, 68, 0.15)',
+              border: '1px solid rgba(239, 68, 68, 0.4)',
+              color: '#f87171',
+              padding: '10px 14px',
+              borderRadius: '8px',
+              fontSize: '12px',
+              width: '100%',
+              boxSizing: 'border-box',
+              textAlign: 'left',
+              wordBreak: 'break-word',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '4px'
+            }}>
+              <strong style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>⚠️ Connection / Auth Error</strong>
+              <span>{authError}</span>
+            </div>
+          )}
 
           {isAuthLoading ? (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', padding: '20px 0' }}>

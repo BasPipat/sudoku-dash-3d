@@ -17,7 +17,7 @@ export interface UserProfile {
   };
 }
 
-const API_BASE_URL = 'http://localhost:5000/api/auth';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/auth';
 const TOKEN_KEY = 'sudoku_dash_token';
 
 const getHeaders = () => {
@@ -51,56 +51,77 @@ export const api = {
 
   // Log in with Google token
   async loginWithGoogle(idToken: string): Promise<UserProfile> {
-    const response = await fetch(`${API_BASE_URL}/google`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ idToken })
-    });
+    try {
+      const response = await fetch(`${API_BASE_URL}/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken })
+      });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Google Login failed');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Google Login failed');
+      }
+
+      const data = await response.json();
+      this.setToken(data.token);
+      return data.user;
+    } catch (err: any) {
+      if (err.name === 'TypeError' || err.message.includes('Failed to fetch')) {
+        throw new Error(`Connection failed: Backend server is unreachable at ${API_BASE_URL}. Ensure server is running and CORS is enabled.`);
+      }
+      throw err;
     }
-
-    const data = await response.json();
-    this.setToken(data.token);
-    return data.user;
   },
 
   // Log in with Apple credentials (Mock/native payload)
   async loginWithApple(appleData: { appleId: string; email: string; displayName?: string; identityToken?: string }): Promise<UserProfile> {
-    const response = await fetch(`${API_BASE_URL}/apple`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(appleData)
-    });
+    try {
+      const response = await fetch(`${API_BASE_URL}/apple`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(appleData)
+      });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Apple Login failed');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Apple Login failed');
+      }
+
+      const data = await response.json();
+      this.setToken(data.token);
+      return data.user;
+    } catch (err: any) {
+      if (err.name === 'TypeError' || err.message.includes('Failed to fetch')) {
+        throw new Error(`Connection failed: Backend server is unreachable at ${API_BASE_URL}.`);
+      }
+      throw err;
     }
-
-    const data = await response.json();
-    this.setToken(data.token);
-    return data.user;
   },
 
   // Fetch current profile stats
   async getProfile(): Promise<UserProfile> {
-    const response = await fetch(`${API_BASE_URL}/profile`, {
-      method: 'GET',
-      headers: getHeaders()
-    });
+    try {
+      const response = await fetch(`${API_BASE_URL}/profile`, {
+        method: 'GET',
+        headers: getHeaders()
+      });
 
-    if (!response.ok) {
-      if (response.status === 401 || response.status === 403) {
-        this.logout(); // clean expired session
+      if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          this.logout(); // clean expired session
+        }
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to fetch profile');
       }
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to fetch profile');
-    }
 
-    return await response.json();
+      return await response.json();
+    } catch (err: any) {
+      if (err.name === 'TypeError' || err.message.includes('Failed to fetch')) {
+        throw new Error(`Connection failed: Backend server is unreachable at ${API_BASE_URL}.`);
+      }
+      throw err;
+    }
   },
 
   // Sync game stats on win
@@ -109,18 +130,25 @@ export const api = {
       throw new Error('User not authenticated');
     }
 
-    const response = await fetch(`${API_BASE_URL}/stats`, {
-      method: 'POST',
-      headers: getHeaders(),
-      body: JSON.stringify({ difficulty, score, time, moves })
-    });
+    try {
+      const response = await fetch(`${API_BASE_URL}/stats`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ difficulty, score, time, moves })
+      });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to save stats');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to save stats');
+      }
+
+      const data = await response.json();
+      return data.stats;
+    } catch (err: any) {
+      if (err.name === 'TypeError' || err.message.includes('Failed to fetch')) {
+        throw new Error(`Connection failed: Backend server is unreachable at ${API_BASE_URL}.`);
+      }
+      throw err;
     }
-
-    const data = await response.json();
-    return data.stats;
   }
 };
