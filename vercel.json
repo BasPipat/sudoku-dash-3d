@@ -15,24 +15,16 @@
   ],
   "routes": [
     {
-      "src": "/api/auth/(.*)",
-      "dest": "server/server.js"
+      "src": "/api/(.*)",
+      "dest": "/server/server.js"
     },
     {
       "src": "/assets/(.*)",
       "dest": "/assets/$1"
     },
     {
-      "src": "/manifest.json",
-      "dest": "/manifest.json"
-    },
-    {
-      "src": "/icon-(.*)",
-      "dest": "/icon-$1"
-    },
-    {
       "src": "/(.*)",
-      "dest": "/$1"
+      "dest": "/index.html"
     }
   ]
 }

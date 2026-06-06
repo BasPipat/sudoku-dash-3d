@@ -60,7 +60,8 @@ export const api = {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Google Login failed');
+        const details = error.error ? `: ${error.error}` : '';
+        throw new Error(`${error.message || 'Google Login failed'}${details}`);
       }
 
       const data = await response.json();

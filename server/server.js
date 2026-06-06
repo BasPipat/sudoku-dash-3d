@@ -10,63 +10,57 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const MONGODB_URI = process.env.MONGODB_URI;
 
-// Middleware
+// Middleware พื้นฐาน
 app.use(cors());
 app.use(express.json());
 
-// Routes
-app.use('/api/auth', authRoutes);
-
-// Health Check Route
-app.get('/', (req, res) => {
-  res.json({ status: 'ok', message: 'Sudoku Dash 3D Backend is running' });
-});
-
-// Database Connection caching for serverless environment
-let cachedDbConnection = null;
+// ----------------------------------------------------
+// ระบบ Database Connection แบบ Serverless (ปลอดภัย ไม่ค้าง)
+// ----------------------------------------------------
+let isConnected = false;
 
 const connectDB = async () => {
-  if (cachedDbConnection) {
-    return cachedDbConnection;
+  if (isConnected) {
+    console.log('=> [MongoDB] Using existing database connection');
+    return;
   }
-  
   if (!MONGODB_URI) {
-    console.warn('MONGODB_URI is not defined in environment variables.');
-    return null;
+    console.error('=> [MongoDB] ERROR: MONGODB_URI is missing!');
+    return;
   }
 
-  console.log('Connecting to MongoDB Atlas...');
+  console.log('=> [MongoDB] Creating new database connection...');
   try {
-    cachedDbConnection = await mongoose.connect(MONGODB_URI);
-    console.log('Successfully connected to MongoDB Atlas Cloud');
-    return cachedDbConnection;
-  } catch (err) {
-    console.error('MongoDB connection error:', err);
-    throw err;
+    const db = await mongoose.connect(MONGODB_URI);
+    isConnected = db.connections[0].readyState;
+    console.log('=> [MongoDB] Successfully connected to Atlas Cloud');
+  } catch (error) {
+    console.error('=> [MongoDB] Connection Error:', error);
   }
 };
 
-// Initialize DB connection
-connectDB().catch(err => {
-  console.log('Running in offline-mode or DB connection pending...');
-});
-
-// Middleware to ensure DB connection is active before handling requests
-app.use(async (req, res, next) => {
-  try {
-    await connectDB();
-  } catch (err) {
-    // Continue in offline-mode if DB is unreachable
-    console.warn('Request processed without DB connection due to error');
-  }
+// ----------------------------------------------------
+// Routes (ฝัง Middleware เช็กฐานข้อมูลเฉพาะตอนจะเรียก API)
+// ----------------------------------------------------
+app.use('/api/auth', async (req, res, next) => {
+  await connectDB();
   next();
+}, authRoutes);
+
+// Health Check เอาไว้เช็กว่า Vercel รันเซิร์ฟเวอร์เราขึ้นไหม
+app.get('/api', (req, res) => {
+  res.json({ status: 'ok', message: 'Sudoku Dash 3D Backend is running on Vercel!' });
 });
 
-// Start listening only if running locally (not on Vercel)
-if (!process.env.VERCEL && process.env.NODE_ENV !== 'production') {
-  app.listen(PORT, () => {
+// ----------------------------------------------------
+// Start Server (เฉพาะตอนรันเทสต์ในเครื่อง Local)
+// ----------------------------------------------------
+if (!process.env.VERCEL) {
+  app.listen(PORT, async () => {
+    await connectDB();
     console.log(`Backend server is running on port ${PORT} (local dev)`);
   });
 }
 
+// โยน app ให้ Vercel จัดการต่อแบบ Serverless
 export default app;
