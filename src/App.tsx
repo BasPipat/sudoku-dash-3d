@@ -93,7 +93,7 @@ const App: React.FC = () => {
             clearInterval(checkGoogleSDK);
             
             google.accounts.id.initialize({
-              client_id: 'your-google-oauth-client-id.apps.googleusercontent.com',
+              client_id: '339789387322-edf3karpmbegkhidl076ivugfbnnrepl.apps.googleusercontent.com',
               callback: handleCredentialResponse,
               auto_select: true // Triggers background auto-login silently
             });
