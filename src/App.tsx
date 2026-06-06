@@ -120,6 +120,8 @@ const App: React.FC = () => {
   const hoveredSliceRef = useRef<{ axis: FocusAxis; index: number } | null>(hoveredSlice);
   hoveredSliceRef.current = hoveredSlice;
 
+  const [isPaused, setIsPaused] = useState<boolean>(false);
+
   // Initialize a new game
   const handleNewGame = () => {
     const newBoard = generatePuzzle(difficulty);
@@ -136,6 +138,7 @@ const App: React.FC = () => {
     setHasLost(false);
     setMistakes(0);
     setHints(0);
+    setIsPaused(false);
   };
 
   // Generate new game when difficulty changes
@@ -145,15 +148,16 @@ const App: React.FC = () => {
 
   // Timer Tick
   useEffect(() => {
-    if (hasWon || hasLost) return;
+    if (hasWon || hasLost || isPaused) return;
     const interval = setInterval(() => {
       setTimer((prev) => prev + 1);
     }, 1000);
     return () => clearInterval(interval);
-  }, [hasWon, hasLost]);
+  }, [hasWon, hasLost, isPaused]);
 
   // Reveal the correct answer for selected cell
   const handleHint = () => {
+    if (isPaused) return;
     if (hints >= 3) return; // Limit to 3 hints max
     const activeCell = selectedCellRef.current;
     if (!activeCell) return;
@@ -184,6 +188,7 @@ const App: React.FC = () => {
 
   // Input number or toggle candidate notes
   const handleNumberInput = (num: number) => {
+    if (isPaused) return;
     const activeCell = selectedCellRef.current;
     if (!activeCell) return;
 
@@ -282,7 +287,7 @@ const App: React.FC = () => {
   // Keyboard navigation & inputs
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (screen !== 'game' || hasWon || hasLost) return;
+      if (screen !== 'game' || hasWon || hasLost || isPaused) return;
 
       const activeCell = selectedCellRef.current;
 
@@ -607,13 +612,22 @@ const App: React.FC = () => {
               <div className="game-subtitle">9x9x9 Multi-Layer Sudoku</div>
             </div>
           </div>
-          <button
-            className="icon-btn theme-toggle-btn"
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            title={theme === 'dark' ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
-          >
-            {theme === 'dark' ? '☀️' : '🌙'}
-          </button>
+          <div className="header-actions" style={{ display: 'flex', gap: '8px' }}>
+            <button
+              className="icon-btn pause-toggle-btn"
+              onClick={() => setIsPaused(true)}
+              title="Pause Game"
+            >
+              ⏸️
+            </button>
+            <button
+              className="icon-btn theme-toggle-btn"
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              title={theme === 'dark' ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
+            >
+              {theme === 'dark' ? '☀️' : '🌙'}
+            </button>
+          </div>
         </header>
 
         {/* Stats HUD Card */}
@@ -991,6 +1005,52 @@ const App: React.FC = () => {
               <button
                 className="btn secondary"
                 onClick={() => setScreen('menu')}
+                style={{ padding: '10px', borderRadius: '8px' }}
+              >
+                🏠 Main Menu
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Game Paused Modal */}
+      {isPaused && (
+        <div className="modal-overlay">
+          <div className="modal-content glass-panel" style={{ borderColor: '#38bdf8', maxWidth: '380px' }}>
+            <div style={{ fontSize: '64px', marginBottom: '15px' }}>⏸️</div>
+            <h2 className="modal-title info" style={{ color: '#38bdf8', fontSize: '28px', marginBottom: '10px' }}>GAME PAUSED</h2>
+            <p className="modal-desc" style={{ fontSize: '15px', color: 'var(--text-muted)', marginBottom: '25px' }}>
+              The game is paused. Your progress is saved.<br />
+              Time: <strong>{formatTime(timer)}</strong>
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+              <button
+                className="btn primary"
+                onClick={() => setIsPaused(false)}
+                style={{
+                  background: 'linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%)',
+                  boxShadow: '0 4px 15px rgba(14, 165, 233, 0.3)',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  fontWeight: '600'
+                }}
+              >
+                ▶️ Resume Game
+              </button>
+              <button
+                className="btn secondary"
+                onClick={handleNewGame}
+                style={{ padding: '10px', borderRadius: '8px' }}
+              >
+                🔄 Restart Game
+              </button>
+              <button
+                className="btn secondary"
+                onClick={() => {
+                  setIsPaused(false);
+                  setScreen('menu');
+                }}
                 style={{ padding: '10px', borderRadius: '8px' }}
               >
                 🏠 Main Menu

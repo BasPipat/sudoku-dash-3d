@@ -79,9 +79,9 @@ export const Cell: React.FC<CellProps> = ({
         edgeColor: '#ccfbf1',
         emissive: '#0f766e',
         emissiveIntensity: 0.8,
-        opacity: 0.95,
-        textColor: '#000000', // Solid black on cyan background is most readable
-        transparent: false,
+        opacity: 0.6,
+        textColor: '#ffffff', // Clean white text stands out on transparent cyan
+        transparent: true,
       };
     }
 
@@ -91,9 +91,9 @@ export const Cell: React.FC<CellProps> = ({
         edgeColor: '#ffd1dc',
         emissive: '#881337',
         emissiveIntensity: 0.55,
-        opacity: 0.95,
+        opacity: 0.6,
         textColor: '#ffffff', // Clean white text on red cell
-        transparent: false,
+        transparent: true,
       };
     }
 
@@ -102,10 +102,10 @@ export const Cell: React.FC<CellProps> = ({
         cellColor: '#10b981', // glowing emerald/neon green
         edgeColor: '#a7f3d0',
         emissive: '#059669',
-        emissiveIntensity: 1.5,
-        opacity: 0.95,
+        emissiveIntensity: 0.6, // Softened glow intensity so it does not washout text
+        opacity: 0.65,
         textColor: '#ffffff', // Clean white text on green cell
-        transparent: false,
+        transparent: true,
       };
     }
 

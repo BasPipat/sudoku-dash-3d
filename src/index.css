@@ -2374,3 +2374,37 @@ h1.game-title {
     border-radius: 16px;
   }
 }
+
+/* Pause Toggle Button Styling */
+.pause-toggle-btn {
+  background: rgba(56, 189, 248, 0.08) !important;
+  border: 1px solid rgba(56, 189, 248, 0.25) !important;
+  color: #38bdf8 !important;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.1);
+}
+
+.pause-toggle-btn:hover {
+  background: rgba(56, 189, 248, 0.22) !important;
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.45) !important;
+  transform: scale(1.06);
+}
+
+.pause-toggle-btn:active {
+  transform: scale(0.94);
+}
+
+/* Modal Title Info for Pause Screen */
+.modal-title.info {
+  color: #38bdf8;
+  text-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+}
