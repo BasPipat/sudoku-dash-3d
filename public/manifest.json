@@ -1,0 +1,28 @@
+{
+  "short_name": "Sudoku 3D",
+  "name": "Sudoku Dash 3D",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    },
+    {
+      "src": "/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#030409",
+  "theme_color": "#030409",
+  "display": "standalone",
+  "orientation": "portrait"
+}
