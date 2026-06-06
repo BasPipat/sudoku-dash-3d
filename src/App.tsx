@@ -3,6 +3,8 @@ import { GameCanvas } from './components/GameCanvas';
 import { Board2D } from './components/Board2D';
 import type { Sudoku3DBoard, SelectedCell, Difficulty, FocusAxis } from './types';
 import { generatePuzzle, checkSudokuRules, checkWinCondition, getGlowingCells } from './utils/sudoku';
+import { api } from './utils/api';
+import type { UserProfile } from './utils/api';
 function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60).toString().padStart(2, '0');
   const s = (seconds % 60).toString().padStart(2, '0');
@@ -30,6 +32,117 @@ const App: React.FC = () => {
   const [screen, setScreen] = useState<'splash' | 'menu' | 'difficulty' | 'game' | 'leaderboard'>('splash');
   const [loadingProgress, setLoadingProgress] = useState<number>(0);
   const [viewMode, setViewMode] = useState<'3d' | '2d'>('3d');
+
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
+
+  // Handle Google OAuth client token callback
+  const handleCredentialResponse = async (response: any) => {
+    try {
+      setIsAuthLoading(true);
+      const userProfile = await api.loginWithGoogle(response.credential);
+      setUser(userProfile);
+      console.log('Successfully logged in via Google:', userProfile.displayName);
+    } catch (err) {
+      console.error('Failed to login via Google:', err);
+    } finally {
+      setIsAuthLoading(false);
+    }
+  };
+
+  // Google Play Games / Game Center Simulated Native Mobile Authentication
+  const handleNativeMobileLogin = async (platform: 'google-play' | 'game-center') => {
+    try {
+      setIsAuthLoading(true);
+      console.log(`Simulating Native Mobile Auto-Login for: ${platform}`);
+      
+      // Call Apple route with mock credentials representing local device
+      const mockProfile = await api.loginWithApple({
+        appleId: `native_user_${platform}`,
+        email: `l3aspipat@gmail.com`, // Sync with user's Atlas account email
+        displayName: platform === 'google-play' ? 'Google Play Player' : 'Game Center Player',
+      });
+      setUser(mockProfile);
+    } catch (err) {
+      console.error(`Native ${platform} login error:`, err);
+    } finally {
+      setIsAuthLoading(false);
+    }
+  };
+
+  // Initialize Auth SDK and attempt background auto-login
+  useEffect(() => {
+    const initAuth = async () => {
+      // 1. Try to restore session from existing JWT token
+      if (api.isAuthenticated()) {
+        try {
+          const profile = await api.getProfile();
+          setUser(profile);
+          setIsAuthLoading(false);
+          return;
+        } catch (err) {
+          console.warn('Session expired. Retrying Google Sign-In.');
+        }
+      }
+
+      // 2. Initialize Google Sign-in Web SDK for silent background check
+      if (typeof window !== 'undefined') {
+        const checkGoogleSDK = setInterval(() => {
+          const google = (window as any).google;
+          if (google && google.accounts && google.accounts.id) {
+            clearInterval(checkGoogleSDK);
+            
+            google.accounts.id.initialize({
+              client_id: 'your-google-oauth-client-id.apps.googleusercontent.com',
+              callback: handleCredentialResponse,
+              auto_select: true // Triggers background auto-login silently
+            });
+
+            google.accounts.id.prompt((notification: any) => {
+              if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+                setIsAuthLoading(false);
+              }
+            });
+          }
+        }, 100);
+
+        setTimeout(() => {
+          clearInterval(checkGoogleSDK);
+          setIsAuthLoading(false);
+        }, 2500);
+      } else {
+        setIsAuthLoading(false);
+      }
+    };
+
+    initAuth();
+  }, []);
+
+  // Synchronize stats to MongoDB Atlas on victory
+  useEffect(() => {
+    if (hasWon && user) {
+      const score = Math.max(1000 - timer - moves * 2, 100);
+      console.log(`Syncing highscore to MongoDB Atlas for ${difficulty}:`, { score, timer, moves });
+      
+      api.saveStats(difficulty, score, timer, moves)
+        .then((updatedStats) => {
+          setUser((prev) => {
+            if (!prev) return null;
+            return {
+              ...prev,
+              stats: {
+                ...prev.stats,
+                ...updatedStats
+              }
+            };
+          });
+          console.log('Successfully saved highscore to cloud!');
+        })
+        .catch((err) => {
+          console.error('Failed to sync score to cloud database:', err);
+        });
+    }
+  }, [hasWon]);
 
   // Transition animation states for "pulling out" effect
   const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
@@ -154,6 +267,28 @@ const App: React.FC = () => {
     }, 1000);
     return () => clearInterval(interval);
   }, [hasWon, hasLost, isPaused]);
+
+  // Render Google Sign-In button on menu screen
+  useEffect(() => {
+    if (screen === 'menu' && !user && !isAuthLoading) {
+      const interval = setInterval(() => {
+        const google = (window as any).google;
+        const btnElement = document.getElementById('google-signin-btn');
+        if (google && google.accounts && google.accounts.id && btnElement) {
+          clearInterval(interval);
+          try {
+            google.accounts.id.renderButton(
+              btnElement,
+              { theme: 'outline', size: 'large', shape: 'pill', text: 'signin_with' }
+            );
+          } catch (e) {
+            console.error('Error rendering Google button:', e);
+          }
+        }
+      }, 100);
+      return () => clearInterval(interval);
+    }
+  }, [screen, user, isAuthLoading]);
 
   // Reveal the correct answer for selected cell
   const handleHint = () => {
@@ -448,6 +583,141 @@ const App: React.FC = () => {
             <h1 className="menu-title glow-cyan-text">SUDOKU DASH 3D</h1>
             <p className="menu-subtitle">9x9x9 Multi-Layer Sudoku</p>
           </div>
+        </div>
+
+        {/* Auth / Database Sync Panel */}
+        <div className="auth-panel glass-panel" style={{
+          padding: '16px 20px',
+          width: '100%',
+          maxWidth: '380px',
+          borderRadius: '16px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '12px',
+          border: '1px solid var(--border-color)',
+          background: 'rgba(20, 25, 45, 0.4)',
+          backdropFilter: 'blur(10px)',
+          boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.3)',
+          margin: '15px 0'
+        }}>
+          <style>{`
+            @keyframes spin { 
+              0% { transform: rotate(0deg); } 
+              100% { transform: rotate(360deg); } 
+            }
+            .spinner {
+              width: 16px;
+              height: 16px;
+              border: 2px solid rgba(255,255,255,0.2);
+              border-top-color: #00e5ff;
+              border-radius: 50%;
+              animation: spin 1s linear infinite;
+              display: inline-block;
+            }
+          `}</style>
+
+          {isAuthLoading ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--text-muted)' }}>
+              <span className="spinner"></span>
+              Connecting to Google Play / Game Center...
+            </div>
+          ) : user ? (
+            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <img 
+                  src={user.avatar || 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y'} 
+                  alt="Avatar" 
+                  style={{ width: '40px', height: '40px', borderRadius: '50%', border: '2px solid #00f0ff' }} 
+                />
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                  <span style={{ fontSize: '15px', fontWeight: 'bold', color: 'var(--text-main)' }}>{user.displayName}</span>
+                  <span style={{ fontSize: '11px', color: '#00ff87', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span style={{ width: '6px', height: '6px', backgroundColor: '#00ff87', borderRadius: '50%', display: 'inline-block' }}></span>
+                    Synced: MongoDB Cloud
+                  </span>
+                </div>
+              </div>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '8px',
+                background: 'rgba(0,0,0,0.25)',
+                padding: '10px',
+                borderRadius: '8px',
+                fontSize: '11px',
+                textAlign: 'center'
+              }}>
+                <div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: '10px' }}>Easy</div>
+                  <div style={{ fontWeight: 'bold', color: '#00ffd5' }}>{user.stats.easy.highScore || '-'}</div>
+                </div>
+                <div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: '10px' }}>Medium</div>
+                  <div style={{ fontWeight: 'bold', color: '#bd00ff' }}>{user.stats.medium.highScore || '-'}</div>
+                </div>
+                <div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: '10px' }}>Hard</div>
+                  <div style={{ fontWeight: 'bold', color: '#ff0055' }}>{user.stats.hard.highScore || '-'}</div>
+                </div>
+              </div>
+              <button 
+                onClick={() => {
+                  api.logout();
+                  setUser(null);
+                }}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--text-muted)',
+                  fontSize: '11px',
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                  alignSelf: 'center',
+                  padding: '4px'
+                }}
+              >
+                Sign Out / Disconnect
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', width: '100%' }}>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)', textAlign: 'center' }}>
+                Sign in to sync your high scores to MongoDB Atlas
+              </div>
+              
+              {/* Google Web Sign In Button Container */}
+              <div id="google-signin-btn" style={{ minHeight: '40px' }}></div>
+              
+              {/* Native Play Games / Game Center Auto-login Simulator */}
+              <button 
+                onClick={() => handleNativeMobileLogin('google-play')}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.04)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  color: 'var(--text-muted)',
+                  padding: '6px 12px',
+                  borderRadius: '16px',
+                  fontSize: '11px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'all 0.2s'
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                  e.currentTarget.style.color = 'var(--text-main)';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
+                  e.currentTarget.style.color = 'var(--text-muted)';
+                }}
+              >
+                🎮 Auto-login via Google Play / Game Center
+              </button>
+            </div>
+          )}
         </div>
         
         <div className="menu-buttons">
