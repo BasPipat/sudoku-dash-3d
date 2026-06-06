@@ -17,7 +17,7 @@ export interface UserProfile {
   };
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/auth';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api/auth';
 const TOKEN_KEY = 'sudoku_dash_token';
 
 const getHeaders = () => {
