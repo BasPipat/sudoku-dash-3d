@@ -640,11 +640,23 @@ const App: React.FC = () => {
           </div>
         </div>
         
-        <div className="hud-item time">
+        <div className="hud-item time" style={{ position: 'relative' }}>
           <span className="hud-icon">⏱️</span>
           <div className="hud-content">
             <span className="hud-label">Time</span>
-            <span className="hud-value glow-cyan">{formatTime(timer)}</span>
+            <span className="hud-value glow-cyan" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              {formatTime(timer)}
+              <button 
+                className="hud-pause-btn" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsPaused(true);
+                }}
+                title="Pause Game"
+              >
+                ⏸️
+              </button>
+            </span>
           </div>
         </div>
 

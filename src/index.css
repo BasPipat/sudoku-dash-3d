@@ -2408,3 +2408,39 @@ h1.game-title {
   color: #38bdf8;
   text-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
 }
+
+/* HUD Mini Pause Button Style */
+.hud-pause-btn {
+  background: rgba(0, 229, 255, 0.1);
+  border: 1px solid rgba(0, 229, 255, 0.2);
+  color: var(--accent-cyan);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  padding: 1px 4px;
+  margin-left: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.hud-pause-btn:hover {
+  background: rgba(0, 229, 255, 0.25);
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 8px rgba(0, 229, 255, 0.4);
+}
+
+.hud-pause-btn:active {
+  transform: scale(0.9);
+}
+
+/* Responsive adjustment for Mobile touch targets */
+@media (max-width: 768px) {
+  .hud-pause-btn {
+    font-size: 10px;
+    padding: 2px 5px;
+    margin-left: 4px;
+  }
+}
