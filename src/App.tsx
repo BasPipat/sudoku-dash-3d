@@ -268,9 +268,9 @@ const App: React.FC = () => {
     return () => clearInterval(interval);
   }, [hasWon, hasLost, isPaused]);
 
-  // Render Google Sign-In button on menu screen
+  // Render Google Sign-In button on login screen
   useEffect(() => {
-    if (screen === 'menu' && !user && !isAuthLoading) {
+    if (screen !== 'splash' && !user && !isAuthLoading) {
       const interval = setInterval(() => {
         const google = (window as any).google;
         const btnElement = document.getElementById('google-signin-btn');
@@ -543,6 +543,137 @@ const App: React.FC = () => {
             <div className="loading-bar" style={{ width: `${loadingProgress}%` }}></div>
           </div>
           <p className="loading-text">Loading Assets... {loadingProgress}%</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Enforce Login: If user is not logged in and splash screen has finished, show full-screen sign-in
+  if (!user) {
+    return (
+      <div className="menu-container" style={{ justifyContent: 'center', gap: '30px' }}>
+        <div className="theme-toggle-corner">
+          <button
+            className="theme-btn"
+            onClick={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
+            aria-label="Toggle theme"
+            style={{
+              background: 'var(--bg-card)',
+              color: 'var(--text-main)',
+              border: '1px solid var(--border-color)',
+              padding: '10px 14px',
+              borderRadius: '50%',
+              cursor: 'pointer',
+              fontSize: '20px',
+              transition: 'all 0.3s ease'
+            }}
+          >
+            {theme === 'dark' ? '☀️' : '🌙'}
+          </button>
+        </div>
+        <div className="menu-logo" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
+          <div className="cube-3d-logo">
+            <div className="cube-logo-face front">9</div>
+            <div className="cube-logo-face back">3</div>
+            <div className="cube-logo-face left">X</div>
+            <div className="cube-logo-face right">D</div>
+            <div className="cube-logo-face top">🏆</div>
+            <div className="cube-logo-face bottom">❤️</div>
+          </div>
+          <div>
+            <h1 className="menu-title glow-cyan-text" style={{ fontSize: '32px', marginBottom: '4px' }}>SUDOKU DASH 3D</h1>
+            <p className="menu-subtitle" style={{ fontSize: '14px' }}>9x9x9 Multi-Layer Sudoku</p>
+          </div>
+        </div>
+
+        <div className="auth-panel glass-panel" style={{
+          padding: '28px 24px',
+          width: '90%',
+          maxWidth: '400px',
+          borderRadius: '20px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '20px',
+          border: '1px solid var(--border-color)',
+          background: 'rgba(20, 25, 45, 0.55)',
+          backdropFilter: 'blur(12px)',
+          boxShadow: '0 12px 40px 0 rgba(0, 0, 0, 0.4)',
+          textAlign: 'center'
+        }}>
+          <style>{`
+            @keyframes spin { 
+              0% { transform: rotate(0deg); } 
+              100% { transform: rotate(360deg); } 
+            }
+            .spinner {
+              width: 20px;
+              height: 20px;
+              border: 3px solid rgba(255,255,255,0.15);
+              border-top-color: #00e5ff;
+              border-radius: 50%;
+              animation: spin 1s linear infinite;
+              display: inline-block;
+            }
+          `}</style>
+
+          <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-main)', margin: 0 }}>
+            🔑 Authentication Required
+          </h3>
+          
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
+            Please sign in to access the game and synchronize your high scores with your MongoDB Cloud database.
+          </p>
+
+          {isAuthLoading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', padding: '20px 0' }}>
+              <span className="spinner"></span>
+              <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                Connecting to Google Play / Game Center...
+              </span>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', width: '100%' }}>
+              {/* Google Web Sign In Button Container */}
+              <div id="google-signin-btn" style={{ minHeight: '44px' }}></div>
+              
+              <div style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '10px', margin: '5px 0' }}>
+                <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }}></div>
+                <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>OR</span>
+                <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }}></div>
+              </div>
+
+              {/* Native Play Games / Game Center Auto-login Simulator */}
+              <button 
+                onClick={() => handleNativeMobileLogin('google-play')}
+                style={{
+                  width: '100%',
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  border: 'none',
+                  color: 'white',
+                  padding: '12px 20px',
+                  borderRadius: '24px',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)',
+                  transition: 'transform 0.2s, box-shadow 0.2s'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+                onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+              >
+                🎮 Auto-login: Google Play / Game Center
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+          Cloud Storage: MongoDB Atlas (l3aspipat@gmail.com)
         </div>
       </div>
     );
